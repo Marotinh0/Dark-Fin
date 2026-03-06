@@ -25,7 +25,7 @@ Features
 
 add this to the top of your Jellyfin's custom CSS field:
 
-@import url("https://cdn.jsdelivr.net/gh/Marotinh0/Dark-Fin@main/Dark-Fin.css"); 
+> @import url("https://<!---->cdn.jsdelivr.net/gh/Marotinh0/Dark-Fin@main/Dark-Fin.css");
 
 ---
 ## 🔧 Compatibility
