@@ -1,11 +1,11 @@
 /* ==========================================================================
-   DARK-FIN (adjusted for Jellyfin 12.2)
+   DARK-FIN (adjusted for Jellyfin 12.x)
    Where to edit:
    - :root (right below): all colors, sizes and the --dfin-* controls
        --dfin-backdrop-height / --dfin-content-top / --dfin-backdrop-focus
        --dfin-header-bg / --dfin-header-blur / --dfin-header-border
        --dfin-focus-ring / --dfin-scroll-thumb / --dfin-enter-distance
-   - Search for "10.11 FIX" to find the detail page and top bar adjustments,
+   - Search for "12.x FIX" to find the detail page and top bar adjustments,
      and for "EXTRAS" to find the optional extras (focus, scrolling,
      animation). Each block can be deleted without affecting the rest.
    - "LAYOUT MOBILE" section (end of the file): the whole phone look, with
@@ -142,7 +142,7 @@
   --track-selection-max-width: 20vw; /* Max width for track selection popup */
   --track-selection-min-width: 160px; /* Min width for track selection popup */
 
-  /* --- Dark-Fin 10.11: detail page and top bar controls --- */
+  /* --- Dark-Fin 12.x: detail page and top bar controls --- */
   --dfin-backdrop-height: 100vh;            /* height of the background image (100vh = full screen) */
   --dfin-content-top: 35vh;                 /* where the content starts over the image */
   --dfin-backdrop-focus: center top;        /* part of the image that stays visible: center top / center center / center 20% */
@@ -715,7 +715,7 @@ a[href*="anidb.net"] {
 :where(html:not(.layout-mobile)) .mainDetailButtons { /* Container for main action buttons (Play, Favorite, etc.) */
   display: flex;
   align-items: center;
-  margin: 0em 0 1.5em 0 !important; /*test: 0.75em was pre-10.11 for the first value */
+  margin: 0em 0 1.5em 0 !important;
   position: relative;
   left: -18px;
   width: 100%; /* Ensure buttons container takes full width in the column */
@@ -728,7 +728,7 @@ a[href*="anidb.net"] {
 
 .layout-desktop .detailPagePrimaryContent {
   width: var(--detail-page-primary-width);
-  padding-left: 0.75vw; /*temp fix for 10.11*/
+  padding-left: 0.75vw;
 }
 
 .layout-desktop .detailPageSecondaryContainer {
@@ -762,7 +762,7 @@ html.preload.layout-desktop {
   width: 80vw;
 }
 
-/* === 10.11 FIX: detail page (full image + content on top) ===
+/* === 12.x FIX: detail page (full image + content on top) ===
    The values live in :root, at the top of the file (--dfin-backdrop-height,
    --dfin-content-top and --dfin-backdrop-focus). */
 /* Image on the right (80% of the width), as in the original theme */
@@ -799,7 +799,7 @@ html.layout-desktop .itemDetailPage .detailPageWrapperContainer {
   margin-top: calc(var(--dfin-content-top) - var(--dfin-backdrop-height)) !important;
 }
 
-/* The content blocks must not have an opaque background: in Jellyfin 10.11, when
+/* The content blocks must not have an opaque background: in Jellyfin 12.x, when
    the "banner" is on and "backdrops" are off (class noBackdropTransparency),
    they get a solid background that cut the image. */
 html.layout-desktop .itemDetailPage .detailPageWrapperContainer,
@@ -812,8 +812,8 @@ html.layout-desktop .itemDetailPage .detailRibbon {
   background-color: transparent !important;
 }
 
-/* === 10.11 FIX: fixed, visible and opaque top menu bar ===
-   In 10.11 the bar is a Material UI AppBar that turns transparent when
+/* === 12.x FIX: fixed, visible and opaque top menu bar ===
+   In 12.x the bar is a Material UI AppBar that turns transparent when
    the page is at the top. Here it is always solid and fixed.
    Color, blur and border: --dfin-header-bg / --dfin-header-blur / --dfin-header-border
    in :root, at the top of the file. */
@@ -1076,7 +1076,7 @@ html:where(:not(.layout-mobile)) header.MuiAppBar-root.MuiAppBar-colorDefault {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 5;
   margin: unset !important; /* remove even more padding between description */
-  margin-top: 0.75em !important; /* 10.11: restore padding between buttons & synopsis */
+  margin-top: 0.75em !important; /* 12.x: restore padding between buttons & synopsis */
 }
 
 :where(html:not(.layout-mobile)) .itemGenres { /* Explicitly hide the .itemGenres if tags are used or it's redundant */
@@ -1192,7 +1192,7 @@ html:where(:not(.layout-mobile)) header.MuiAppBar-root.MuiAppBar-colorDefault {
     grid-template-columns: repeat(auto-fill, minmax(var(--episode-grid-min-item-width), 1fr));
     gap: var(--episode-grid-gap);
     padding: var(--episode-grid-padding);
-    margin-right: 54vw !important; /*10.11: see if this fixes the grid view being too short*/
+    margin-right: 54vw !important; /*12: see if this fixes the grid view being too short*/
   padding-left: 0vw !important;
 }
 
@@ -1603,7 +1603,7 @@ option {
 
 }
 
-/* 10.11 FIXES below. should see about re-arranging these at a later time. */
+/* 12.x FIXES below. should see about re-arranging these at a later time. */
 /* restore position for ribbon */
 html.layout-desktop [dir="ltr"] .detailRibbon {
     padding-left: 0.75vw !important; /* Overrides JS-injected style */
@@ -1714,7 +1714,7 @@ html.layout-desktop [dir="rtl"] .detailRibbon {
 /* (closes the @media (max-width: 900px) above, which was left open in the original theme) */
 
 /*--------------------------------------------------------------------------*/
-/* === DARK-FIN 10.11 EXTRAS (polish) ===
+/* === DARK-FIN 12.x EXTRAS (polish) ===
    Everything here is optional and independent: any block can be deleted
    without affecting the rest of the theme. */
 
@@ -1850,6 +1850,7 @@ html.layout-desktop .itemDetailPage .overview {
   --m-logo-h: 18vh;               /* maximum logo height over the backdrop */
   --m-poster-w: 46vw;             /* poster width when there is no logo */
   --m-title-when-logo: none;      /* none = hides the title if a logo exists; block = shows it */
+  --m-misc-offset: 0.9rem;        /* espaço acima da linha ano / nota / duração (com logo) */
   --card-portrait-w: 31vw;        /* width of portrait cards (Movies, Shows) */
   --card-backdrop-w: 62vw;        /* width of landscape cards (Continue Watching) */
   --card-square-w: 38vw;
@@ -2194,6 +2195,35 @@ html.layout-mobile .mediaInfoItems {
   font-size: 0.82rem;
 }
 
+/* Year / rating / runtime row: a little lower so it doesn't sit right on the title or logo */
+html.layout-mobile .itemMiscInfo-primary {
+  margin-top: var(--m-misc-offset);
+}
+
+html.layout-mobile .detailLogo.hide ~ .detailPageWrapperContainer .itemMiscInfo-primary {
+  margin-top: 0.4rem;           /* sem logo: o título de texto já tem margem própria */
+}
+
+/* Jellyfin reserves ~37.5% of left padding in .infoWrapper for the poster, even when the
+   poster is hidden. That squeezed the year / runtime / ratings row into the right side of
+   the screen and made it wrap when there were 2+ ratings. Remove it so the row is centered
+   on the full width. */
+html.layout-mobile .infoWrapper,
+html.layout-mobile [dir="ltr"] .infoWrapper,
+html.layout-mobile [dir="rtl"] .infoWrapper {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
+}
+
+/* Spacing comes from the row gap; drop the default 1em right margin of each item */
+html.layout-mobile .itemMiscInfo .mediaInfoItem,
+html.layout-mobile .mediaInfoItems .mediaInfoItem {
+  margin: 0 !important;
+}
+
 html.layout-mobile .mainDetailButtons {
   display: flex;
   flex-wrap: wrap;
@@ -2283,7 +2313,7 @@ html.layout-mobile .itemDetailsGroup .label {
   letter-spacing: 0.04em;
 }
 
-html.layout-mobile .itemDetailsGroup .content,           /* Jellyfin <= 10.11 */
+html.layout-mobile .itemDetailsGroup .content,           /* Jellyfin <= 12.x */
 html.layout-mobile .itemDetailsGroup .detailsGroupItem > .focuscontainer-x {
   display: flex;
   flex-wrap: wrap;
