@@ -663,6 +663,88 @@ html.preload.layout-desktop {
   width: 80vw;
 }
 
+/* === 10.11 FIX: página de detalhes (imagem inteira + conteúdo por cima) ===
+   Ajuste só estas duas variáveis:
+   --dfin-backdrop-height : altura da imagem (100vh = tela inteira)
+   --dfin-content-top     : onde o conteúdo começa (35vh = como no tema original) */
+html.layout-desktop {
+  --dfin-backdrop-height: 100vh;
+  --dfin-content-top: 35vh;
+}
+
+/* Imagem à direita (80% da largura), como no tema original */
+html.layout-desktop .itemDetailPage .itemBackdrop {
+  position: relative !important;
+  display: block !important;
+  left: auto !important;
+  right: -20% !important;
+  width: 80vw !important;
+  height: var(--dfin-backdrop-height) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  background-attachment: scroll !important;
+  background-position: center top !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Degradê à esquerda e embaixo, desenhado POR CIMA da imagem */
+html.layout-desktop .itemDetailPage .itemBackdrop::after {
+  content: "" !important;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgb(24, 24, 24), rgba(24, 24, 24, 0) 60%),
+    linear-gradient(360deg, rgb(24, 24, 24), rgba(24, 24, 24, 0) 60%);
+}
+
+/* O conteúdo sobe por cima da imagem; a posição não depende da altura dela */
+html.layout-desktop .itemDetailPage .detailPageWrapperContainer {
+  position: relative;
+  z-index: 1;
+  margin-top: calc(var(--dfin-content-top) - var(--dfin-backdrop-height)) !important;
+}
+
+/* Os blocos de conteúdo não podem ter fundo opaco: no Jellyfin 10.11, quando
+   o "banner" está ligado e os "backdrops" desligados (classe
+   noBackdropTransparency), eles recebem um fundo sólido que cortava a imagem. */
+html.layout-desktop .itemDetailPage .detailPageWrapperContainer,
+html.layout-desktop .itemDetailPage .detailPagePrimaryContainer,
+html.layout-desktop .itemDetailPage .detailPageSecondaryContainer,
+html.layout-desktop .itemDetailPage .detailPageContent,
+html.layout-desktop .itemDetailPage .detailPagePrimaryContent,
+html.layout-desktop .itemDetailPage .detailRibbon {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* === 10.11 FIX: barra do menu do topo fixa, visível e opaca ===
+   No 10.11 a barra é um AppBar do Material UI que fica transparente quando
+   a página está no topo. Aqui ela fica sempre sólida e fixa.
+   Para mudar a cor, altere --dfin-header-bg. */
+html {
+  --dfin-header-bg: #101010;
+}
+
+html header.MuiAppBar-root,
+html header.MuiAppBar-root.MuiAppBar-colorTransparent,
+html header.MuiAppBar-root.MuiAppBar-colorDefault {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  z-index: 1300 !important;
+  transform: none !important;
+  background-color: var(--dfin-header-bg) !important;
+  background-image: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
 /* --- Backdrop container, Logo & Mask --- */
 .backdropContainer {
   height: 100vh;
