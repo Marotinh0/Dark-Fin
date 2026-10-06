@@ -30,6 +30,6 @@ add this to the top of your Jellyfin's custom CSS field:
 ---
 ## 🔧 Compatibility
 
-- Tested with Jellyfin 10.11.6
+- Tested with Jellyfin 12.2
 - Not guaranteed to be compatible with unofficial forks or third-party clients
 - At the moment, primarily designed for desktop/web. Works on mobile devices, but a few things will look different - mobile needs some more work
