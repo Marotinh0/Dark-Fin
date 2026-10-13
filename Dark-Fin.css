@@ -1,159 +1,180 @@
 /* ==========================================================================
-   DARK-FIN (adjusted for Jellyfin 12.x)
+   DARK-FIN (revised for Jellyfin 12.x)
+
    Where to edit:
-   - :root (right below): all colors, sizes and the --dfin-* controls
+   - :root (right below): all colors, sizes, texts and the --dfin-* controls
        --dfin-backdrop-height / --dfin-content-top / --dfin-backdrop-focus
        --dfin-header-bg / --dfin-header-blur / --dfin-header-border
+       --dfin-glass-bg / --dfin-glass-filter  (header, action sheets, selects)
        --dfin-focus-ring / --dfin-scroll-thumb / --dfin-enter-distance
-   - Search for "12.x FIX" to find the detail page and top bar adjustments,
-     and for "EXTRAS" to find the optional extras (focus, scrolling,
-     animation). Each block can be deleted without affecting the rest.
+       --dfin-txt-*  (texts injected by CSS: translate them there)
+       --dfin-icon-* (external link logos: point them to local files if you want)
+   - Search for "12.x FIX" for the detail page and top bar adjustments, and
+     for "EXTRAS" for the optional extras (focus, scrolling, animation).
+     Each block can be deleted without affecting the rest.
    - "LAYOUT MOBILE" section (end of the file): the whole phone look, with
      the --m-* variables at the start of it.
 
    DEFAULT x MOBILE (isolated)
    - The default theme only applies when Jellyfin is NOT in html.layout-mobile
-     (selectors get :where(html:not(.layout-mobile)), which does not change
-     specificity). Desktop and TV stay exactly as before.
-   - The mobile section only applies in html.layout-mobile and does not
-     affect desktop/TV.
-   - When adding new rules to the default theme, use the same prefix (or
-     .layout-desktop / .layout-tv) to keep the isolation.
+     (selectors are nested under :where(html:not(.layout-mobile)), which has
+     zero specificity). Desktop and TV stay exactly as before.
+   - The mobile section only applies in html.layout-mobile.
+   - When adding new rules to the default theme, put them inside one of the
+     ":where(html:not(.layout-mobile)) { ... }" blocks (with "& .selector").
+
+   REQUIREMENTS
+   - Uses CSS nesting, :where(), :has(), :dir() and color-mix(): a browser
+     from 2023 or newer (Chrome/Edge 111+, Firefox 121+, Safari 16.5+).
    ========================================================================== */
 
 /* === FONTS === */
-
-@import url(https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,400..700;1,400..700&display=swap);
-
-@font-face {
-  font-display: swap;
-  font-family: 'Rubik';
-  font-style: normal;
-  font-weight: 400;
-}
+/* Needs internet. For LAN-only use, host the Rubik files on your server and
+   replace this line with @font-face rules that point to them. */
+@import url("https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,400..700;1,400..700&display=swap");
 
 /*--------------------------------------------------------------------------*/
 /* === CONFIGURABLE THEME VARIABLES (:root) === */
 
 :root:where(:not(.layout-mobile)) {
+  color-scheme: dark; /* native controls (select, scrollbar) in dark mode */
+  accent-color: var(--theme-accent-color); /* native checkbox / radio / range use the theme accent */
+
   /* --- Base Colors --- */
   --theme-background-color: #181818; /* Base background for the page */
-  --theme-background-color-alpha: #18181849; /* Background with alpha for some elements */
   --theme-text-color: #eee; /* Primary text color */
   --theme-text-color-secondary: #dbdbdb; /* Secondary text color (e.g., episode titles) */
   --theme-accent-color: #00a5dc; /* Main accent color (links, highlights) */
-  --theme-accent-color-alpha-low: #000; /* Accent color with low alpha (hover effects) */
-  --theme-accent-color-alpha-med: #00a5dc28; /* Accent color with medium alpha (hover effects) */
-  --theme-accent-color-alpha-high: #00a5dc93; /* Accent color with high alpha (progress bar) */
-  --theme-accent-color-alpha-hover: #01bfffed; /* Accent color on hover */
-  --theme-accent-color-emby: 65, 65, 65;       /* Accent color on Home and Favorites Tab #414141 */
-  --theme-accent-color-embytext: 25, 25, 25;   /* Accent color on Home and Favorites Text #191919 */
-  --theme-warning-color: #bb4a4a; /* Color for warning/destructive actions (e.g., shutdown) */
-
+  /* Accent variants are derived from the accent above (same look as before) */
+  --theme-accent-color-alpha-low: color-mix(in srgb, var(--theme-accent-color) 12%, transparent); /* icon button hover */
+  --theme-accent-color-alpha-med: color-mix(in srgb, var(--theme-accent-color) 16%, transparent); /* list / menu hover */
+  --theme-accent-color-alpha-high: color-mix(in srgb, var(--theme-accent-color) 58%, transparent); /* progress bar, selection */
+  --theme-accent-color-alpha-hover: #01bfffed; /* Accent color on hover (lighter than the accent) */
+  --theme-tab-bg: #414141; /* Active / hovered tab (Home, Favorites...) background */
+  --theme-tab-text: #191919; /* Hovered tab text */
+  --theme-warning-color: #bb4a4a; /* Warning/destructive actions (e.g., shutdown) */
+  --theme-restart-color: #bb7a4a; /* Admin dashboard restart button */
+  --theme-tab-label: #000; /* Tab labels in the header pill (check the contrast on your screen) */
+  --dfin-pill-bg: rgba(207, 221, 233, 0.35); /* header pills: tabs and right-hand buttons */
+  --dfin-pill-text: rgb(21 28 25);
+  --dfin-surface-dark: rgba(0, 0, 0, 0.75); /* dark panels: action sheet content, filter dialog, thumbnail buttons */
 
   /* --- Alpha Colors (White & Black) --- */
-  --theme-white-alpha-low: rgba(255, 255, 255, 0.08);
-  --theme-white-alpha-med: rgba(255, 255, 255, 0.1);
-  --theme-white-alpha-med-high: rgba(255, 255, 255, 0.15);
-  --theme-white-alpha-high: rgba(255, 255, 255, 0.16);
-  --theme-white-alpha-higher: rgba(255, 255, 255, 0.3);
   --theme-white-alpha-text-low: rgba(255, 255, 255, 0.7);
   --theme-white-alpha-text-med: rgba(255, 255, 255, 0.85);
   --theme-white-alpha-text-high: rgba(255, 255, 255, 0.9);
-  --theme-black-alpha-low: rgba(0, 0, 0, 0.3);   /* Shadows */
-  --theme-black-alpha-med: rgba(0, 0, 0, 0.55);  /* Progress bar bg, overlays */
-  --theme-black-alpha-high: rgba(0, 0, 0, 0.6);  /* Context menu bg */
+  --theme-black-alpha-med: rgba(0, 0, 0, 0.55);   /* Progress bar bg, overlays */
+  --theme-black-alpha-high: rgba(0, 0, 0, 0.6);   /* Context menu bg */
   --theme-black-alpha-higher: rgba(0, 0, 0, 0.8); /* Text shadows */
-  --theme-black-alpha-highest: rgba(0, 0, 0, 0.85);/* Tooltips */
 
   /* --- Element Backgrounds --- */
-  --card-bg: #101010; /* Background color for cards */
+  --card-bg: transparent; /* Card box background (behind titles and subtitles). Use e.g. #101010 for a dark box */
   --indicator-bg: #10101094; /* Background for indicators (played, count) */
   --transparent-bg: #10101000; /* Fully transparent background */
-  --header-bg: rgba(0, 0, 0, 0.6); /* Background for header/action sheet */
-  --button-bg: #2f2f2f; /* Background for standard buttons */
-  --button-bg-subtle: rgba(255, 255, 255, 0.1); /* Subtle background for pill buttons, etc. */
-  --button-bg-subtle-hover: rgba(255, 255, 255, 0.16); /* Hover background for subtle buttons */
-  --button-bg-play: rgba(255, 255, 255, 0.3); /* Background for primary play buttons */
-  --button-bg-overlay: rgba(255, 255, 255, 0.08); /* Background for small overlay buttons */
-  --button-bg-overlay-hover: rgba(255, 255, 255, 0.15); /* Hover background for small overlay buttons */
-  --tooltip-bg: rgba(0, 0, 0, 0.85); /* Background for tooltips */
-  --context-menu-bg: rgba(58, 58, 58, 0.5); /* Fallback background for context menus (used with blur) */
-  --sidebar-bg: rgba(0, 0, 0, 0.6); /* Background for collapsible sidebar */
-  --episode-grid-bg: #00000082; /* Background for episode elements in the episode grid */
+  --header-bg: rgba(0, 0, 0, 0.6); /* Header / toast / action sheet background */
+  --button-bg-subtle: rgba(255, 255, 255, 0.1); /* Pill buttons, tags */
+  --button-bg-subtle-hover: rgba(255, 255, 255, 0.16);
+  --button-bg-overlay: rgba(255, 255, 255, 0.08); /* Small overlay buttons */
+  --button-bg-overlay-hover: rgba(255, 255, 255, 0.15);
+  --tooltip-bg: rgba(0, 0, 0, 0.85);
+  --sidebar-bg: rgba(0, 0, 0, 0.6); /* Collapsible sidebar */
+  --episode-grid-bg: #00000082; /* Episode elements in the episode grid */
 
   /* --- Borders & Roundness --- */
-  --theme-roundness: 0.5rem; /* General border radius */
-  --theme-roundness-large: 15px; /* Larger border radius (e.g., cards) */
-  --theme-roundness-xlarge: 1em; /* Extra large border radius (e.g., paper list) */
-  --theme-roundness-full: 4em; /* Pill/fully rounded shape */
-  --theme-roundness-progress: 10px; /* Border radius for progress bars */
-  /* Border Gradient (Uncomment to use, ensure --border-color-solid is transparent) */
-  /* --border-color: linear-gradient(45deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 41%, rgba(255, 255, 255, 0.1) 57%, rgba(255, 255, 255, 0.3) 100%); */
-  --border-color-solid: transparent; /* Use transparent for gradient border, or set a solid color */
-  --border-width: 1px; /* Standard border width */
-  --border-width-thick: 2px; /* Thicker border width */
-  --rounding-circle: 100px; /* Home, Favorite background */
+  --theme-roundness: 0.5rem;
+  --theme-roundness-large: 15px;
+  --theme-roundness-xlarge: 1em;
+  --theme-roundness-full: 4em;
+  --theme-roundness-progress: 10px;
+  /* Border gradient: "none" = plain border using --border-color-solid.
+     To use a gradient border, set --border-color to a gradient and
+     --border-color-solid to transparent. Example:
+     --border-color: linear-gradient(45deg, rgba(255,255,255,.4) 0%, rgba(255,255,255,.1) 41%, rgba(255,255,255,.1) 57%, rgba(255,255,255,.3) 100%); */
+  --border-color: none;
+  --border-color-solid: transparent;
+  --border-width: 1px;
+  --border-width-thick: 2px;
+  --rounding-circle: 100px; /* Home, Favorites tab background */
 
   /* --- Effects --- */
-  /--blur-intensity: 2px; /* Blur amount */
-  --blur-saturation: 180%; /* Saturation amount for blurred elements */
-  --blur-effect: blur(var(--blur-intensity)) saturate(var(--blur-saturation)); /* Combined blur effect */
-  --card-shadow: 0px 8px 16px var(--theme-black-alpha-low); /* Shadow for cards */
-  --text-shadow-continue-watching: 0 1px 3px var(--theme-black-alpha-higher); /* Text shadow for 'Continue Watching' */
+  --blur-intensity: 2px;
+  --blur-saturation: 180%;
+  --blur-effect: blur(var(--blur-intensity)) saturate(var(--blur-saturation));
+  --text-shadow-continue-watching: 0 1px 3px var(--theme-black-alpha-higher);
   --text-shadow-video-cue: /* Crunchyroll-style outline for subtitles */
     -3px -3px 0 black, -3px 0 0 black, -3px 3px 0 black,
     0 -3px 0 black, 0 3px 0 black,
     3px -3px 0 black, 3px 0 0 black, 3px 3px 0 black;
+  /* Shadows are globally disabled (see GLOBAL STYLES); remove that block to use shadows. */
 
   /* --- Fonts & Text --- */
-  --font-family-base: "Rubik", sans-serif; /* Primary font */
-  --font-family-video-cue: 'Trebuchet MS', sans-serif; /* Font for video subtitles */
+  --font-family-base: "Rubik", sans-serif;
+  --font-family-video-cue: 'Trebuchet MS', sans-serif;
   --font-size-small: small;
-  --font-size-base: 0.9rem; /* Base font size (e.g., episode titles) */
+  --font-size-base: 0.9rem;
   --font-size-large: large;
-  --font-size-h2: 1.5em; /* Default h2 size */
   --font-weight-normal: 400;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
   /* --- Layout & Sizing --- */
-  --card-padding: 25px; /* Padding inside cards */
-  --detail-page-side-padding: 3vw; /* Padding on the sides of detail pages */
-  --detail-page-secondary-side-padding: 4vw; /* padding for the secondary container (cast & crew, More Like This) */
-  --detail-page-primary-width: 60%; /* Width of the primary content area on desktop detail pages */
-  --detail-page-backdrop-offset: 17%; /* Offset for the backdrop image */
-  --detail-page-backdrop-width: 85vw; /* Width of the backdrop container */
-  --detail-page-mask-offset: 16%; /* Start mask slightly before backdrop */
-  --detail-page-mask-width: 85vw; /* Make mask slightly wider than backdrop */
-  --detail-page-content-offset: -50vh; /* Vertical offset for content */
-  --overflow-card-margin-left: 0vw; /* Left margin for the first overflow card */
-  --overflow-portrait-width: 12.1vw; /* Width for portrait overflow cards */
-  --overflow-backdrop-width: 18.5vw; /* Width for backdrop overflow cards */
-  --episode-grid-gap: 1.5rem; /* Gap between items in the episode grid */
-  --episode-grid-padding: 1rem; /* Padding around the episode grid */
-  --episode-grid-min-item-width: 200px; /* Minimum width for episode grid items */
-  --button-icon-only-size: 3.125rem; /* Size (width/height) for icon-only buttons */
-  --button-play-padding: 0.5rem 1rem; /* Padding for the play button */
-  --button-overlay-size: 26px; /* Size for small overlay buttons */
-  --button-overlay-icon-size: 16px; /* Icon size within small overlay buttons */
-  --button-episode-action-size: 32px; /* Size for episode action buttons */
-  --button-episode-action-icon-size: 18px; /* Icon size for episode action buttons */
-  --track-selection-max-width: 20vw; /* Max width for track selection popup */
-  --track-selection-min-width: 160px; /* Min width for track selection popup */
+  --card-padding: 25px;
+  --Card-gap: 0; /* gap between cards in grids (it was referenced but never defined) */
+  --detail-page-side-padding: 3vw;
+  --detail-page-secondary-side-padding: 4vw; /* cast & crew, More Like This */
+  --detail-page-primary-width: 60%;
+  --overflow-card-margin-left: 0vw;
+  --overflow-portrait-width: clamp(110px, 12.1vw, 220px); /* clamp: not tiny on small windows, not huge on 4K */
+  --overflow-backdrop-width: clamp(180px, 18.5vw, 340px);
+  --overflow-special-backdrop-max: clamp(150px, 13.4vw, 260px); /* specials / music videos / scenes */
+  --dfin-episode-grid-width: clamp(360px, 42vw, 1000px); /* width of the episode grid on season pages */
+  --episode-grid-gap: 1.5rem;
+  --episode-grid-padding: 1rem;
+  --episode-grid-min-item-width: 200px;
+  --button-overlay-size: 26px;
+  --button-overlay-icon-size: 16px;
+  --button-episode-action-size: 32px;
+  --button-episode-action-icon-size: 18px;
+  --track-selection-min-width: 160px;
 
-  /* --- Dark-Fin 12.x: detail page and top bar controls --- */
+  /* --- Dark-Fin 12.x: detail page, top bar and glass controls --- */
   --dfin-backdrop-height: 100vh;            /* height of the background image (100vh = full screen) */
   --dfin-content-top: 35vh;                 /* where the content starts over the image */
   --dfin-backdrop-focus: center top;        /* part of the image that stays visible: center top / center center / center 20% */
+  --dfin-fade: /* fade of the image into the page background (left and bottom) */
+    linear-gradient(to right, var(--theme-background-color), transparent 60%),
+    linear-gradient(to top, var(--theme-background-color), transparent 60%);
   --dfin-header-bg: #101010;                /* top bar color (use rgba(16,16,16,.7) for a glass look) */
   --dfin-header-blur: none;                 /* bar blur: none or blur(16px) saturate(180%) */
   --dfin-header-border: rgba(255, 255, 255, 0.06); /* thin line under the bar */
-  --dfin-focus-ring: var(--theme-accent-color);    /* focus ring color (keyboard) */
+  --dfin-header-z: 1250;                    /* above the drawer (1200), below dialogs/menus (1300) */
+  --dfin-glass-bg: transparent;             /* header / action sheets / selects background */
+  --dfin-glass-filter: var(--liquid-glass, blur(16px) saturate(180%)); /* ...and their blur */
+  --dfin-pill-blur: blur(24px);             /* blur behind the tab pill and the right-hand header pill */
+  --dfin-menu-width: clamp(340px, 35vw, 600px); /* centered context menus (cast, SyncPlay) */
+  --dfin-focus-ring: var(--theme-accent-color);    /* keyboard focus ring color */
   --dfin-scroll-thumb: rgba(255, 255, 255, 0.22);  /* scrollbar color */
   --dfin-scroll-thumb-hover: rgba(255, 255, 255, 0.4);
   --dfin-enter-distance: 14px;              /* entrance animation distance (0px turns it off) */
-  --dfin-count-color: #fff;                 /* text color of the episode/item count badge on cards */
+  --dfin-count-color: #fff;                 /* text color of the item count badge on cards */
+
+  /* --- Texts injected by CSS (translated below for Portuguese) --- */
+  --dfin-txt-play: "Play"; /* if you use a longer word, also widen .btnPlay (see detail buttons) */
+  --dfin-txt-tags-closed: "Hover to show tags ▸";
+  --dfin-txt-tags-open: "Tags ▾";
+  --dfin-txt-details: "Details";
+  --dfin-txt-more: "More";
+
+  /* --- External link logos (item page). Hotlinked: if one breaks, save the
+         file on your server and point the variable to it. --- */
+  --dfin-icon-imdb: url("https://upload.wikimedia.org/wikipedia/commons/6/69/IMDB_Logo_2016.svg");
+  --dfin-icon-trakt: url("https://trakt.tv/assets/logos/logo.default.negative-7c28b25bb270dc291faa5d7794b9bfd6fcdf4698ee5e6504151167fbecd8a197.svg");
+  --dfin-icon-tmdb: url("https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-5bdc75aaebeb75dc7ae79426ddd9be3b2be1e342510f8202baf6bffa71d7f5c4.svg");
+  --dfin-icon-tmdb-collection: url("https://i.imgur.com/Vguav7a.png");
+  --dfin-icon-tvdb: url("https://www.thetvdb.com/images/logo.svg");
+  --dfin-icon-tvmaze: url("https://static.tvmaze.com/images/tvm-header-logo.png");
+  --dfin-icon-anilist: url("https://upload.wikimedia.org/wikipedia/commons/6/61/AniList_logo.svg");
+  --dfin-icon-anidb: url("https://i.imgur.com/7hpyHRn.png");
 
   /* --- Toggles (Control display of certain elements) --- */
   /* Set to 'none' to hide, or an appropriate display value (block, flex, inline-block) to show */
@@ -168,6 +189,13 @@
   --display-movie-trailer-tab: inline-block;
 }
 
+/* Portuguese texts (used when Jellyfin sets lang="pt..."; edit freely) */
+:root:where(:not(.layout-mobile)):lang(pt) {
+  --dfin-txt-tags-closed: "Passe o mouse para ver as tags ▸";
+  --dfin-txt-details: "Detalhes";
+  --dfin-txt-more: "Mais";
+}
+
 /*--------------------------------------------------------------------------*/
 /* === GLOBAL STYLES === */
 
@@ -177,145 +205,185 @@ html:where(:not(.layout-mobile)) {
   margin: 0;
   padding: 0;
   background-color: var(--theme-background-color) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-:where(html:not(.layout-mobile)) *,
-:where(html:not(.layout-mobile)) 
-*::before,
-:where(html:not(.layout-mobile)) 
-*::after {
-  box-shadow: none !important;
-  -webkit-box-shadow: none !important;
-  -moz-box-shadow: none !important;
+:where(html:not(.layout-mobile)) {
+  /* Same font on the MUI parts of 12.x (the mobile section already did this) */
+  & body,
+  & button,
+  & input,
+  & select,
+  & textarea,
+  & .MuiTypography-root,
+  & .MuiButton-root {
+    font-family: var(--font-family-base);
+  }
+
+  /* Flat look: no shadows anywhere (keyboard focus is left alone) */
+  & *:not(:focus-visible),
+  & *::before,
+  & *::after {
+    box-shadow: none !important;
+  }
 }
 
 /*--------------------------------------------------------------------------*/
 /* === CORE UI ELEMENTS (Header, Drawer, Action Sheets, Form Elements) === */
 
-/* --- Header, Action Sheet, Main Drawer --- */
-:where(html:not(.layout-mobile)) .skinHeader,
-:where(html:not(.layout-mobile)) 
-.actionSheet,
-:where(html:not(.layout-mobile)) 
-.mainDrawer,
-:where(html:not(.layout-mobile)) 
-select:enabled,
-:where(html:not(.layout-mobile)) 
-option {
-  background-color: var(--header-bg);
-  backdrop-filter: var(--blur-effect) !important;
-  -webkit-backdrop-filter: var(--blur-effect) !important;
-}
+:where(html:not(.layout-mobile)) {
+  /* --- Header, action sheets and selects: one "glass" definition ---
+     Large screens: transparent + blur. Small screens: see the
+     max-width: 1024px block near the end (solid-ish, no blur). */
+  & .skinHeader,
+  & .actionSheet,
+  & select:enabled,
+  & option {
+    background-color: var(--dfin-glass-bg);
+    -webkit-backdrop-filter: var(--dfin-glass-filter) !important;
+    backdrop-filter: var(--dfin-glass-filter) !important;
+  }
 
-:where(html:not(.layout-mobile)) .mainDrawer {
-  background-color: var(--sidebar-bg);
-}
+  & .mainDrawer {
+    background-color: var(--sidebar-bg);
+    -webkit-backdrop-filter: var(--blur-effect) !important;
+    backdrop-filter: var(--blur-effect) !important;
+  }
 
-:where(html:not(.layout-mobile)) .skinHeader,
-:where(html:not(.layout-mobile)) 
-.actionSheet,
-:where(html:not(.layout-mobile)) 
-.mainDrawer {
-  border-style: solid;
-  border-width: var(--border-width);
-  border-color: var(--border-color-solid);
-  border-image-slice: 1;
-  border-image-source: var(--border-color);
-}
+  & .skinHeader,
+  & .actionSheet,
+  & .mainDrawer {
+    border-style: solid;
+    border-width: var(--border-width);
+    border-color: var(--border-color-solid);
+    border-image-slice: 1;
+    border-image-source: var(--border-color);
+  }
 
-:where(html:not(.layout-mobile)) .actionSheetContent {
-    background: rgba(0, 0, 0, 0.75);
-}
+  & .actionSheetContent {
+    background: var(--dfin-surface-dark);
+  }
 
-:where(html:not(.layout-mobile)) .skinHeader { /* we don't want to round the header since it creates 1-2px holes at corners */
-  border-left: 0;
-  border-right: 0;
-  border-top: 0;
-  border-radius: 0px;
-}
+  & .skinHeader { /* no rounding: it creates 1-2px holes at the corners */
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+    border-radius: 0;
+  }
 
-:where(html:not(.layout-mobile)) .headerTabs,
-:where(html:not(.layout-mobile))  .headerRight { /* Header background */
-  background-color: rgba(207, 221, 233, 0.35) !important;
-  border-radius: var(--rounding-circle) !important;
-  color: rgba(21, 28, 25) !important;
-  backdrop-filter: blur(50px) !important;
-}
+  & .skinHeader.focuscontainer-x.skinHeader-withBackground.skinHeader-blurred {
+    background: none;
+  }
 
-:where(html:not(.layout-mobile)) .headerTabs {
-  width: auto !important;
-  align-self: center !important;
-  margin-top: -4em;
-}
-/* --- Header Tabs --- */
-.layout-desktop .skinHeader {
-    padding-top: 1.5em !important;
-    padding-bottom: 1.5em !important;
-}
+  & .skinHeader.focuscontainer-x.skinHeader-withBackground.skinHeader-blurred.noHomeButtonHeader {
+    background: none;
+    background-color: transparent;
+  }
 
-/* Button height */
-:where(html:not(.layout-mobile)) .headerRight,
-.layout-desktop .emby-tab-button {
-    height: 45px !important;
-}
+  & .skinHeader .headerRight .paper-icon-button-light {
+    -webkit-backdrop-filter: unset !important;
+    backdrop-filter: unset !important;
+    background-color: transparent !important;
+  }
 
-/* fixes issue with text no being centered */
-:where(html:not(.layout-mobile)) .emby-tab-button {
+  /* --- Header pills (tabs + right-hand buttons) --- */
+  & .headerTabs,
+  & .headerRight {
+    background-color: var(--dfin-pill-bg) !important;
+    border-radius: var(--rounding-circle) !important;
+    color: var(--dfin-pill-text) !important;
+    -webkit-backdrop-filter: var(--dfin-pill-blur) !important;
+    backdrop-filter: var(--dfin-pill-blur) !important;
+  }
+
+  & .headerTabs {
+    width: auto !important;
+    align-self: center !important;
+    margin-top: -4em;
+  }
+
+  & .emby-tab-button { /* fixes text not being centered */
     display: inline-flex;
-}
-:where(html:not(.layout-mobile)) .headerRight, .layout-desktop .emby-tab-button {
-  height: 45px !important;
-}
+    color: var(--theme-tab-label);
+  }
 
-:where(html:not(.layout-mobile)) #indexPage .homeLibraryButton,
-:where(html:not(.layout-mobile)) 
-.emby-tab-button {
+  & #indexPage .homeLibraryButton,
+  & .emby-tab-button {
     background: transparent !important;
     min-width: 0 !important;
     max-width: 50vw !important;
     width: fit-content !important;
+  }
+
+  & .emby-tab-button:hover {
+    color: var(--theme-tab-text) !important;
+    transition: color 100ms;
+  }
+
+  & .raised:hover .homeLibraryText,
+  & .emby-tab-button:hover .emby-button-foreground {
+    color: var(--theme-tab-text) !important;
+    transition: color 100ms;
+  }
+
+  & #indexPage .homeLibraryButton:hover,
+  & .emby-tab-button:hover {
+    background-color: color-mix(in srgb, var(--theme-tab-bg) 50%, transparent) !important;
+    border-radius: var(--rounding-circle) !important;
+  }
+
+  & .emby-tab-button-active {
+    background-color: var(--theme-tab-bg) !important;
+    border-radius: var(--rounding-circle) !important;
+  }
+
+  /* --- Form Elements (Select/Option) --- */
+  & select:enabled,
+  & option {
+    border-style: solid;
+    border-width: var(--border-width);
+  }
+
+  /* --- Video Player OSD Header --- */
+  & .skinHeader-withBackground.osdHeader {
+    border: 0;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background: linear-gradient(to bottom, hsla(0, 0%, 6%, .75), hsla(0, 0%, 6%, 0));
+    color: var(--theme-text-color);
+    height: 7.5em;
+    pointer-events: none;
+    position: relative;
+    transition: opacity .3s ease-out;
+    z-index: 1;
+  }
 }
 
-.layout-desktop .itemsContainer,
-.layout-desktop .emby-tabs-slider {
+/* Desktop layout header sizing */
+.layout-desktop {
+  & .skinHeader {
+    padding-block: 1.5em !important;
+  }
+
+  & .headerRight,
+  & .emby-tab-button { /* button height */
+    height: 45px !important;
+  }
+
+  & .itemsContainer,
+  & .emby-tabs-slider {
     margin: 0 !important;
-}
+  }
 
-.layout-desktop .homeLibraryButton,
-.layout-desktop .emby-tab-button {
+  & .homeLibraryButton,
+  & .emby-tab-button {
     margin: 0.5em !important;
+  }
 }
 
-:where(html:not(.layout-mobile)) .emby-tab-button:hover {
-  color: rgb(var(--theme-accent-color-embytext)) !important;
-    transition: 100ms;
-}
-
-:where(html:not(.layout-mobile)) .raised:hover .homeLibraryText,
-:where(html:not(.layout-mobile)) 
-.emby-tab-button:hover .emby-button-foreground {
-    color: rgb(var(--theme-accent-color-embytext)) !important;
-    transition: 100ms;
-}
-
-:where(html:not(.layout-mobile)) #indexPage .homeLibraryButton:hover,
-:where(html:not(.layout-mobile)) 
-.emby-tab-button:hover {
-    background-color: rgba(var(--theme-accent-color-emby), 0.5) !important;
-    border-radius: var(--rounding-circle) !important;
-}
-
-:where(html:not(.layout-mobile)) .emby-tab-button {
-  color: #000;
-}
-
-:where(html:not(.layout-mobile)) .emby-tab-button-active {
-  background-color: rgb(var(--theme-accent-color-emby)) !important;
-    border-radius: var(--rounding-circle) !important;
-}
-
-/* --- Header Warning/Announcement --- */
-/*.skinHeader::before {
+/* --- Header Warning/Announcement (optional) ---
+.skinHeader::before {
   content: " put your cool announcement here";
   display: var(--display-header-warning);
   background-color: #222222;
@@ -325,507 +393,426 @@ option {
   font-weight: var(--font-weight-normal);
 }*/
 
-/* --- Form Elements (Select/Option) --- */
-:where(html:not(.layout-mobile)) select:enabled,
-:where(html:not(.layout-mobile)) 
-option {
-  border-style: solid;
-  border-width: var(--border-width);
+/*--------------------------------------------------------------------------*/
+/* === ELEMENT HIDING / TOGGLES === */
+
+:where(html:not(.layout-mobile)) {
+  & .selectVideoContainer { display: none !important; }
+  & .itemExternalLinks { display: var(--display-external-links) !important; }
+  & .tomato-rating { display: var(--display-tomato-rating) !important; }
+  & .age-rating { display: var(--display-age-rating) !important; }
+  & .imdb-logo { display: var(--display-imdb-logo) !important; }
+  & .imdb-logo + span { display: var(--display-imdb-logo) !important; }
+  & .starRatingContainer.mediaInfoItem { display: var(--display-star-rating) !important; }
+  & .mediaInfoCriticRating { display: var(--display-critic-rating) !important; }
+
+  /* Separators follow the item they belong to */
+  & .tomato-rating + .separator-icon { display: var(--display-tomato-rating) !important; }
+  & .age-rating + .separator-icon { display: var(--display-age-rating) !important; }
+  & .imdb-logo + .separator-icon,
+  & .imdb-logo + span + .separator-icon { display: var(--display-imdb-logo) !important; }
+
+  /* Movie trailer tab (legacy header markup) */
+  & body > div.skinHeader.focuscontainer-x.skinHeader-withBackground.skinHeader-blurred > div.sectionTabs > div > div > button:nth-child(3),
+  & .mainDrawer:has(.navMenuOption-selected[href^="#/movies.html"]) + .skinHeader [data-index="2"] {
+    display: var(--display-movie-trailer-tab) !important;
+  }
 }
 
-/* --- Video Player OSD Header --- */
-:where(html:not(.layout-mobile)) .skinHeader-withBackground.osdHeader {
-  border: 0;
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-  background: linear-gradient(180deg, hsla(0, 0%, 6%, .75), hsla(0, 0%, 6%, 0));
-  color: var(--theme-text-color);
-  height: 7.5em;
-  pointer-events: none;
-  position: relative;
-  transition: opacity .3s ease-out;
-  z-index: 1;
-}
+/*--------------------------------------------------------------------------*/
+/* === EXTERNAL LINK LOGOS (item page) === */
 
-/* --- Element hiding --- */
-:where(html:not(.layout-mobile)) .selectVideoContainer { display: none !important; }
-:where(html:not(.layout-mobile)) .itemExternalLinks { display: var(--display-external-links) !important; }
-:where(html:not(.layout-mobile)) .tomato-rating { display: var(--display-tomato-rating) !important; }
-:where(html:not(.layout-mobile)) .age-rating { display: var(--display-age-rating) !important; }
-:where(html:not(.layout-mobile)) .imdb-logo { display: var(--display-imdb-logo) !important; }
-:where(html:not(.layout-mobile)) .imdb-logo+span { display: var(--display-imdb-logo) !important; }
-:where(html:not(.layout-mobile)) .starRatingContainer.mediaInfoItem { display: var(--display-star-rating) !important; }
-:where(html:not(.layout-mobile)) .mediaInfoCriticRating { display: var(--display-critic-rating) !important; }
+:where(html:not(.layout-mobile)) {
+  & .itemExternalLinks a:is(
+    [href*="imdb.com"], [href*="trakt.tv"], [href*="themoviedb.org"],
+    [href*="thetvdb.com"], [href*="tvmaze.com"], [href*="anilist.co"], [href*="anidb.net"]
+  ) {
+    font-size: 0; /* hide the link text, keep the logo */
+    display: flex;
+    align-items: center;
+  }
 
-/* Hide separators next to hidden items */
-:where(html:not(.layout-mobile)) .imdb-logo+.separator-icon,
-:where(html:not(.layout-mobile)) 
-.tomato-rating+.separator-icon,
-:where(html:not(.layout-mobile)) 
-.age-rating+.separator-icon,
-:where(html:not(.layout-mobile)) 
-.imdb-logo+span+.separator-icon {
-  display: var(--display-imdb-logo) !important;
-}
+  & .itemExternalLinks a:is(
+    [href*="imdb.com"], [href*="trakt.tv"], [href*="themoviedb.org"],
+    [href*="thetvdb.com/movies"], [href*="thetvdb.com/series"], [href*="thetvdb.com/tv"], [href*="thetvdb.com/?tab=series"],
+    [href*="tvmaze.com"], [href*="anilist.co"], [href*="anidb.net"]
+  )::before {
+    content: "";
+    display: inline-block;
+    width: 36px;
+    height: 18px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    vertical-align: middle;
+    box-sizing: border-box;
+  }
 
-/* Hide Movie Trailer Tab */
-:where(html:not(.layout-mobile)) body > div.skinHeader.focuscontainer-x.skinHeader-withBackground.skinHeader-blurred > div.sectionTabs > div > div > button:nth-child(3),
-:where(html:not(.layout-mobile)) 
-.mainDrawer:has(.navMenuOption-selected[href^="#/movies.html"]) + .skinHeader [data-index="2"] {
-  display: var(--display-movie-trailer-tab) !important;
-}
+  & .itemExternalLinks a[href*="imdb.com"]::before { background-image: var(--dfin-icon-imdb); }
+  & .itemExternalLinks a[href*="trakt.tv"]::before { background-image: var(--dfin-icon-trakt); transform: scale(1.2); }
+  & .itemExternalLinks a[href*="themoviedb.org"]::before { background-image: var(--dfin-icon-tmdb); }
+  & .itemExternalLinks a[href*="themoviedb.org/collection"]::before { background-image: var(--dfin-icon-tmdb-collection); }
+  & .itemExternalLinks a:is([href*="thetvdb.com/movies"], [href*="thetvdb.com/series"], [href*="thetvdb.com/tv"], [href*="thetvdb.com/?tab=series"])::before { background-image: var(--dfin-icon-tvdb); }
+  & .itemExternalLinks a[href*="tvmaze.com"]::before { background-image: var(--dfin-icon-tvmaze); transform: scale(1.2); }
+  & .itemExternalLinks a[href*="anilist.co"]::before { background-image: var(--dfin-icon-anilist); }
+  & .itemExternalLinks a[href*="anidb.net"]::before { background-image: var(--dfin-icon-anidb); }
 
-/* --- Show Metadata Icons --- */
-:where(html:not(.layout-mobile)) a[href*="imdb.com"]::before,
-:where(html:not(.layout-mobile)) 
-a[href*="trakt.tv"]::before,
-:where(html:not(.layout-mobile)) 
-a[href*="themoviedb.org"]::before,
-:where(html:not(.layout-mobile)) 
-a[href*="themoviedb.org/collection"]::before,
-:where(html:not(.layout-mobile)) 
-a[href*="thetvdb.com/movies"]::before,
-:where(html:not(.layout-mobile)) 
-a[href*="thetvdb.com/series"]::before,
-:where(html:not(.layout-mobile)) 
-a[href*="thetvdb.com/tv"]::before,
-:where(html:not(.layout-mobile)) 
-a[href*="thetvdb.com/?tab=series"]::before,
-:where(html:not(.layout-mobile)) 
-a[href*="tvmaze.com"]::before,
-:where(html:not(.layout-mobile)) 
-a[href*="anilist.co"]::before,
-:where(html:not(.layout-mobile)) 
-a[href*="anidb.net"]::before {
-  content: "";
-  display: inline-block;
-  width: 36px;
-  height: 18px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  vertical-align: middle;
-  box-sizing: border-box;
-}
-
-:where(html:not(.layout-mobile)) a[href*="imdb.com"]::before {
-  background-image: url(https://upload.wikimedia.org/wikipedia/commons/6/69/IMDB_Logo_2016.svg);
-}
-
-:where(html:not(.layout-mobile)) a[href*="trakt.tv"]::before {
-  background-image: url(https://trakt.tv/assets/logos/logo.default.negative-7c28b25bb270dc291faa5d7794b9bfd6fcdf4698ee5e6504151167fbecd8a197.svg);
-  transform: scale(1.2);
-}
-
-:where(html:not(.layout-mobile)) a[href*="themoviedb.org"]::before {
-  background-image: url(https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-5bdc75aaebeb75dc7ae79426ddd9be3b2be1e342510f8202baf6bffa71d7f5c4.svg);
-}
-
-:where(html:not(.layout-mobile)) a[href*="themoviedb.org/collection"]::before {
-  background-image: url(https://i.imgur.com/Vguav7a.png);
-}
-
-:where(html:not(.layout-mobile)) a[href*="thetvdb.com/movies"]::before,
-:where(html:not(.layout-mobile)) 
-a[href*="thetvdb.com/series"]::before,
-:where(html:not(.layout-mobile)) 
-a[href*="thetvdb.com/tv"]::before,
-:where(html:not(.layout-mobile)) 
-a[href*="thetvdb.com/?tab=series"]::before {
-  background-image: url(https://www.thetvdb.com/images/logo.svg);
-}
-
-:where(html:not(.layout-mobile)) a[href*="tvmaze.com"]::before {
-  background-image: url(https://static.tvmaze.com/images/tvm-header-logo.png);
-  transform: scale(1.2);
-}
-
-:where(html:not(.layout-mobile)) a[href*="anilist.co"]::before {
-  background-image: url(https://upload.wikimedia.org/wikipedia/commons/6/61/AniList_logo.svg);
-}
-
-:where(html:not(.layout-mobile)) a[href*="anidb.net"]::before {
-  background-image: url(https://i.imgur.com/7hpyHRn.png);
-}
-
-:where(html:not(.layout-mobile)) a[href*="imdb.com"],
-:where(html:not(.layout-mobile)) 
-a[href*="trakt.tv"],
-:where(html:not(.layout-mobile)) 
-a[href*="themoviedb.org"],
-:where(html:not(.layout-mobile)) 
-a[href*="themoviedb.org/collection"],
-:where(html:not(.layout-mobile)) 
-a[href*="thetvdb.com"],
-:where(html:not(.layout-mobile)) 
-a[href*="tvmaze.com"],
-:where(html:not(.layout-mobile)) 
-a[href*="anilist.co"],
-:where(html:not(.layout-mobile)) 
-a[href*="anidb.net"] {
-  font-size: 0;
-  display: flex;
-  align-items: center;
-}
-
-:where(html:not(.layout-mobile)) .itemExternalLinks.focuscontainer-x {
-  align-items: center;
-  gap: 8px;
-  color: #fff0 !important;
-  margin: 1.5em 0 !important;
+  & .itemExternalLinks.focuscontainer-x {
+    align-items: center;
+    gap: 8px;
+    color: #fff0 !important;
+    margin: 1.5em 0 !important;
+  }
 }
 
 /*--------------------------------------------------------------------------*/
 /* === CARDS === */
 
-/* --- Card Base --- */
-:where(html:not(.layout-mobile)) .cardBox {
-  background: linear-gradient(var(--card-bg), var(--card-bg)) padding-box,
-              var(--border-color) border-box;
-  border: var(--border-width) solid var(--border-color-solid);
-  border-radius: var(--theme-roundness-large);
-  box-shadow: var(--card-shadow);
-  padding: var(--card-padding);
-  transition: transform 0.3s ease-in-out;
-}
-
-:where(html:not(.layout-mobile)) .itemsContainer > .card > .cardBox:hover {
-  transform: translateY(-5px);
-}
-
-:where(html:not(.layout-mobile)) .cardImageContainer {
-  border-top-right-radius: var(--theme-roundness-large);
-  border-top-left-radius: var(--theme-roundness-large);
-}
-
-:where(html:not(.layout-mobile)) .cardBox:not(.visualCardBox) .cardPadder {
-  background-color: var(--transparent-bg);
-}
-
-/* --- Card Overlays & Content --- */
-:where(html:not(.layout-mobile)) .cardOverlayContainer,
-:where(html:not(.layout-mobile)) 
-.cardContent:not(.dashboardSection .cardContent),
-:where(html:not(.layout-mobile)) 
-.cardPadder:not(.dashboardSection .cardPadder),
-:where(html:not(.layout-mobile)) 
-.blurhash-canvas {
-  border-radius: var(--theme-roundness) !important;
-}
-
-:where(html:not(.layout-mobile)) .cardOverlayContainer {
-  background-color: var(--transparent-bg);
-  overlay: none;
-}
-
-:where(html:not(.layout-mobile)) .cardScalables,
-:where(html:not(.layout-mobile)) 
-.cardPadder {
-  overlay: none;
-}
-
-:where(html:not(.layout-mobile)) .cardText {
-  font-size: var(--font-size-large);
-  padding: 1px;
-}
-
-:where(html:not(.layout-mobile)) .cardText-secondary {
-  font-size: var(--font-size-small);
-}
-
-/* --- Card Indicators (Played, Count, Media Source, etc.) --- */
-:where(html:not(.layout-mobile)) .countIndicator,
-:where(html:not(.layout-mobile)) 
-.fullSyncIndicator,
-:where(html:not(.layout-mobile)) 
-.mediaSourceIndicator,
-:where(html:not(.layout-mobile)) 
-.playedIndicator {
-  backdrop-filter: var(--blur-effect) !important;
-  -webkit-backdrop-filter: var(--blur-effect) !important;
-  background-color: var(--indicator-bg) !important;
-  border-radius: var(--theme-roundness);
-}
-
-/* Episode / item count badge on cards: always readable text (the badge background is dark) */
-:where(html:not(.layout-mobile)) .countIndicator,
-:where(html:not(.layout-mobile)) .countIndicator.indicator,
-:where(html:not(.layout-mobile)) .cardIndicators .countIndicator.indicator,
-:where(html:not(.layout-mobile)) .countIndicator *,
-:where(html:not(.layout-mobile)) .cardIndicators > .indicator:not(.timerIndicator):not(.timerIndicator-inactive) {
-  color: var(--dfin-count-color) !important;
-  -webkit-text-fill-color: var(--dfin-count-color) !important;
-  opacity: 1;
-}
-
-/* --- Card Progress Bar --- */
-:where(html:not(.layout-mobile)) .innerCardFooter > .itemProgressBar {
-  -webkit-backdrop-filter: var(--blur-effect);
-  backdrop-filter: var(--blur-effect);
-  background-color: var(--theme-black-alpha-med);
-  border-radius: var(--theme-roundness-progress);
-  margin-bottom: 10px;
-  margin-left: 20px;
-  overflow: hidden;
-  padding: 3px;
-  position: relative;
-  right: 10px;
-}
-
-:where(html:not(.layout-mobile)) .itemProgressBarForeground {
-  background-color: var(--theme-accent-color-alpha-high);
-  border-radius: var(--theme-roundness-progress);
-  z-index: 1;
-}
-
-/* --- Card Overlay Buttons (Small Icons, e.g., Add to Playlist) --- */
-:where(html:not(.layout-mobile)) .cardOverlayButton-br {
-  position: absolute;
-  bottom: unset !important;
-  right: unset !important;
-  top: 0.26rem;
-  left: 0.6rem;
-  display: flex;
-  gap: 0.3rem;
-  border-radius: 6px;
-  background-color: var(--theme-black-alpha-med);
-  z-index: 10;
-}
-
-:where(html:not(.layout-mobile)) [dir="ltr"] .cardOverlayButton-br {
-  left: 3%;
-}
-
-:where(html:not(.layout-mobile)) .cardOverlayButton {
-  background: var(--button-bg-overlay);
-  border-radius: 50%;
-  width: var(--button-overlay-size);
-  height: var(--button-overlay-size);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--theme-white-alpha-text-med);
-  border: none;
-  padding: 0;
-  font-size: var(--button-overlay-icon-size);
-  transition: background-color 0.2s ease-out, color 0.2s ease-out;
-}
-
-:where(html:not(.layout-mobile)) .cardOverlayButton:hover {
-  background: var(--button-bg-overlay-hover);
-  color: var(--theme-white-alpha-text-high);
-}
-
-:where(html:not(.layout-mobile)) .cardOverlayButton .material-icons {
-  font-size: inherit;
-  line-height: 1;
-}
-
-/* --- FAB (Floating Action Button) Play Button on Cards --- */
-:where(html:not(.layout-mobile)) .cardOverlayFab-primary {
-  -webkit-backdrop-filter: var(--blur-effect);
-  backdrop-filter: var(--blur-effect);
-  background-color: var(--theme-accent-color);
-  opacity: 0.8;
-  border-style: solid;
-  border-width: var(--border-width-thick);
-  border-color: var(--border-color-solid);
-  border-image-source: var(--border-color);
-  border-image-slice: 1;
-  color: var(--theme-text-color);
-  transition: background-color 0.2s ease-out, opacity 0.2s ease-out;
-}
-
-:where(html:not(.layout-mobile)) .cardOverlayFab-primary:hover {
-  background-color: var(--theme-accent-color-alpha-hover);
-  opacity: 1.0;
-}
-
-/* --- Larger Play/More Info Buttons inside Card Overlays --- */
-:where(html:not(.layout-mobile)) .cardOverlayButtonIcon-hover.play_arrow {
-  font-size: 1.1em !important;
-  width: 1.1em !important;
-  height: 1.1em !important;
-  line-height: 1.2em !important;
-}
-
-:where(html:not(.layout-mobile)) .cardOverlayButton.cardOverlayButton-hover.itemAction .material-icons {
-  font-size: 1.4em !important;
-}
-
-:where(html:not(.layout-mobile)) .cardOverlayButton.cardOverlayButton-hover.itemAction {
-  transform: scale(0.8) !important;
-  transform-origin: center center !important;
-  padding: 2px !important;
-}
-
-/* New: Hide Main Card Library Name*/
-@media all and (min-width: 50em) {
-  :where(html:not(.layout-mobile)) #specialsCollapsible .emby-scroller,
-:where(html:not(.layout-mobile)) 
-  #musicVideosCollapsible.emby-scroller,
-:where(html:not(.layout-mobile)) 
-  #scenesCollapsible.emby-scroller {
-    margin-right: 0;
+:where(html:not(.layout-mobile)) {
+  /* --- Card Base --- */
+  & .cardBox {
+    background: linear-gradient(var(--card-bg), var(--card-bg)) padding-box,
+                var(--border-color) border-box;
+    border: var(--border-width) solid var(--border-color-solid);
+    border-radius: var(--theme-roundness-large);
+    padding: var(--card-padding);
+    transition: transform 0.3s ease-in-out;
   }
-  :where(html:not(.layout-mobile)) #specialsCollapsible .emby-scrollbuttons,
-:where(html:not(.layout-mobile)) 
-  #musicVideosCollapsible .emby-scrollbuttons,
-:where(html:not(.layout-mobile)) 
-  #scenesCollapsible .emby-scrollbuttons {
-    display: none;
+
+  & .cardImageContainer {
+    border-top-right-radius: var(--theme-roundness-large);
+    border-top-left-radius: var(--theme-roundness-large);
   }
-  :where(html:not(.layout-mobile)) #specialsCollapsible .itemsContainer,
-:where(html:not(.layout-mobile)) 
-  #musicVideosCollapsible .itemsContainer,
-:where(html:not(.layout-mobile)) 
-  #scenesCollapsible .itemsContainer {
-    flex-wrap: wrap;
+
+  & .cardBox:not(.visualCardBox) .cardPadder {
+    background-color: var(--transparent-bg);
   }
-  :where(html:not(.layout-mobile)) #specialsCollapsible .overflowBackdropCard,
-:where(html:not(.layout-mobile)) 
-  #musicVideosCollapsible .overflowBackdropCard,
-:where(html:not(.layout-mobile)) 
-  #scenesCollapsible .overflowBackdropCard {
-    max-width: 13.4vw !important;
+
+  /* --- Card Overlays & Content --- */
+  & .cardOverlayContainer,
+  & .cardContent:not(.dashboardSection .cardContent),
+  & .cardPadder:not(.dashboardSection .cardPadder),
+  & .blurhash-canvas {
+    border-radius: var(--theme-roundness) !important;
   }
-  :where(html:not(.layout-mobile)) .verticalSection.section0 .textActionButton {
-    display: none;
+
+  & .cardOverlayContainer {
+    background-color: var(--transparent-bg);
+  }
+
+  & .cardText {
+    font-size: var(--font-size-large);
+    padding: 1px;
+  }
+
+  & .cardText-secondary {
+    font-size: var(--font-size-small);
+  }
+
+  /* --- Card Indicators (Played, Count, Media Source, etc.) ---
+     No backdrop-filter here on purpose: one filter per badge on every card
+     is expensive in big grids, and the background is already dark. */
+  & .countIndicator,
+  & .fullSyncIndicator,
+  & .mediaSourceIndicator,
+  & .playedIndicator {
+    background-color: var(--indicator-bg) !important;
+    border-radius: var(--theme-roundness);
+  }
+
+  /* Item count badge: always readable text (the badge background is dark) */
+  & .countIndicator,
+  & .countIndicator.indicator,
+  & .cardIndicators .countIndicator.indicator,
+  & .countIndicator *,
+  & .cardIndicators > .indicator:not(.timerIndicator):not(.timerIndicator-inactive) {
+    color: var(--dfin-count-color) !important;
+    -webkit-text-fill-color: var(--dfin-count-color) !important;
+    opacity: 1;
+  }
+
+  & .playedIndicator {
+    font-size: 125%;
+  }
+
+  /* --- Card Progress Bar --- */
+  & .innerCardFooter > .itemProgressBar {
+    background-color: var(--theme-black-alpha-med);
+    border-radius: var(--theme-roundness-progress);
+    margin-bottom: 10px;
+    margin-left: 20px;
+    overflow: hidden;
+    padding: 3px;
+    position: relative;
+    right: 10px;
+  }
+
+  & .itemProgressBarForeground {
+    background-color: var(--theme-accent-color-alpha-high);
+    border-radius: var(--theme-roundness-progress);
+    z-index: 1;
+  }
+
+  /* --- Card Overlay Buttons (small icons, e.g., Add to Playlist) --- */
+  & .cardOverlayButton-br {
+    position: absolute;
+    bottom: unset !important;
+    right: unset !important;
+    top: 0.26rem;
+    left: 0.6rem;
+    display: flex;
+    gap: 0.3rem;
+    border-radius: 6px;
+    background-color: var(--theme-black-alpha-med);
+    z-index: 10;
+  }
+
+  & .cardOverlayButton-br:dir(ltr) {
+    left: 3%;
+  }
+
+  & .cardOverlayButton {
+    background: var(--button-bg-overlay);
+    border-radius: 50%;
+    width: var(--button-overlay-size);
+    height: var(--button-overlay-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--theme-white-alpha-text-med);
+    border: none;
+    padding: 0;
+    font-size: var(--button-overlay-icon-size);
+    transition: background-color 0.2s ease-out, color 0.2s ease-out;
+  }
+
+  & .cardOverlayButton:hover {
+    background: var(--button-bg-overlay-hover);
+    color: var(--theme-white-alpha-text-high);
+  }
+
+  & .cardOverlayButton .material-icons {
+    font-size: inherit;
+    line-height: 1;
+  }
+
+  /* --- FAB (Floating Action Button) Play Button on Cards --- */
+  & .cardOverlayFab-primary {
+    -webkit-backdrop-filter: var(--blur-effect);
+    backdrop-filter: var(--blur-effect);
+    background-color: var(--theme-accent-color);
+    opacity: 0.8;
+    border-style: solid;
+    border-width: var(--border-width-thick);
+    border-color: var(--border-color-solid);
+    border-image-source: var(--border-color);
+    border-image-slice: 1;
+    color: var(--theme-text-color);
+    transition: background-color 0.2s ease-out, opacity 0.2s ease-out;
+  }
+
+  & .cardOverlayFab-primary:hover {
+    background-color: var(--theme-accent-color-alpha-hover);
+    opacity: 1;
+  }
+
+  /* --- Larger Play/More Info Buttons inside Card Overlays --- */
+  & .cardOverlayButtonIcon-hover.play_arrow {
+    font-size: 1.1em !important;
+    width: 1.1em !important;
+    height: 1.1em !important;
+    line-height: 1.2em !important;
+  }
+
+  & .cardOverlayButton.cardOverlayButton-hover.itemAction .material-icons {
+    font-size: 1.4em !important;
+  }
+
+  & .cardOverlayButton.cardOverlayButton-hover.itemAction {
+    transform: scale(0.8) !important;
+    transform-origin: center center !important;
+    padding: 2px !important;
+  }
+
+  /* fix play arrow alignment on cards */
+  & span.material-icons.cardOverlayButtonIcon.cardOverlayButtonIcon-hover.play_arrow {
+    left: 0;
   }
 }
 
-:where(html:not(.layout-mobile)) .itemsContainer > .card > .cardBox:hover {
-  transform: translateY(-5px);
+/* Lift cards on hover (mouse only: on touch it would stay "stuck") */
+@media (hover: hover) and (pointer: fine) {
+  :where(html:not(.layout-mobile)) .itemsContainer > .card > .cardBox:hover {
+    transform: translateY(-5px);
+  }
+}
+
+/* Special features / music videos / scenes: wrapping grid instead of a scroller */
+@media (width >= 50em) {
+  :where(html:not(.layout-mobile)) {
+    & :is(#specialsCollapsible, #musicVideosCollapsible, #scenesCollapsible) {
+      & .emby-scroller { margin-right: 0; }
+      & .emby-scrollbuttons { display: none; }
+      & .itemsContainer { flex-wrap: wrap; }
+      & .overflowBackdropCard { max-width: var(--overflow-special-backdrop-max) !important; }
+    }
+
+    /* Hide the "see all" button of the first home section */
+    & .verticalSection.section0 .textActionButton {
+      display: none;
+    }
+  }
 }
 
 /*--------------------------------------------------------------------------*/
 /* === ITEM DETAILS PAGE === */
 
 /* --- Layout Containers --- */
-.layout-desktop .detailPagePrimaryContainer {
-  background-color: var(--transparent-bg);
-  display: block;
-  left: var(--detail-page-side-padding);
-  /*padding-left: var(--detail-page-side-padding); */
-  z-index: 2; /* Above backdrop/mask */
-  position: relative;
-  width: var(--detail-page-primary-width);
+.layout-desktop {
+  & .detailPagePrimaryContainer {
+    background-color: var(--transparent-bg);
+    display: block;
+    left: var(--detail-page-side-padding);
+    z-index: 2; /* Above backdrop/mask */
+    position: relative;
+    width: var(--detail-page-primary-width);
+  }
+
+  & .detailPageContent {
+    padding-left: 0;
+  }
+
+  & .detailPagePrimaryContent {
+    width: var(--detail-page-primary-width);
+    padding-left: 0.75vw;
+  }
+
+  & .detailPageSecondaryContainer {
+    background-color: var(--transparent-bg);
+    padding-top: 0 !important; /* no gap between buttons and description on a show page */
+    padding-left: var(--detail-page-secondary-side-padding);
+    z-index: 2;
+  }
+
+  & .itemDetailsGroup {
+    margin-top: 0;
+  }
+
+  & .detailLogo {
+    background-position: top left;
+    left: 5%;
+  }
+
+  /* Hide the poster on the detail page (the backdrop is the hero) */
+  & .detailImageContainer .card {
+    display: none;
+  }
+
+  & .itemName {
+    font-weight: var(--font-weight-normal);
+  }
+
+  & a.overview-expand.emby-button {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Season page: "More from season" header */
+  & .moreFromSeasonSection {
+    display: block;
+    padding-bottom: 0.5em;
+  }
+
+  & .moreFromSeasonSection .sectionTitle {
+    padding-right: 0.5em !important;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  & .moreFromSeasonSection .emby-scrollbuttons {
+    padding-right: 0 !important;
+    flex-shrink: 0;
+  }
+
+  & .btnPlay:hover { /* hover animation for the play button */
+    background-color: var(--theme-accent-color-alpha-med);
+    transform: translateX(5px);
+  }
 }
 
-:where(html:not(.layout-mobile)) .mainDetailButtons { /* Container for main action buttons (Play, Favorite, etc.) */
+/* Buttons row */
+:where(html:not(.layout-mobile)) .mainDetailButtons {
   display: flex;
   align-items: center;
-  margin: 0em 0 1.5em 0 !important;
+  margin: 0 0 1.5em 0 !important;
   position: relative;
   left: -18px;
-  width: 100%; /* Ensure buttons container takes full width in the column */
-}
-
-.layout-desktop .detailPageContent {
-  /*padding-left: var(--detail-page-side-padding);*/
-  padding-left: 0;
-}
-
-.layout-desktop .detailPagePrimaryContent {
-  width: var(--detail-page-primary-width);
-  padding-left: 0.75vw;
-}
-
-.layout-desktop .detailPageSecondaryContainer {
-  background-color: var(--transparent-bg);
-  padding-top: 0 !important; /* remove padding between buttons and description on a show page */
-  padding-left: var(--detail-page-secondary-side-padding);
-  z-index: 2;
-}
-
-.layout-desktop .itemDetailsGroup {
-  margin-top: 0;
-}
-
-html.preload.layout-desktop {
-  background-color: #181818;
-}
-
-.layout-desktop .detailLogo {
-  background-position: top left;
-  left: 5%;
-}
-
-.layout-desktop .itemBackdrop {
-  background-attachment: scroll;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  height: 100vh;
-  position: relative;
-  right: -20%;
-  width: 80vw;
+  width: 100%;
 }
 
 /* === 12.x FIX: detail page (full image + content on top) ===
-   The values live in :root, at the top of the file (--dfin-backdrop-height,
-   --dfin-content-top and --dfin-backdrop-focus). */
-/* Image on the right (80% of the width), as in the original theme */
-html.layout-desktop .itemDetailPage .itemBackdrop {
-  position: relative !important;
-  display: block !important;
-  left: auto !important;
-  right: -20% !important;
-  width: 80vw !important;
-  height: var(--dfin-backdrop-height) !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  background-attachment: scroll !important;
-  background-position: var(--dfin-backdrop-focus) !important;
-  background-size: cover !important;
-  background-repeat: no-repeat !important;
-}
+   The values live in :root (--dfin-backdrop-height, --dfin-content-top and
+   --dfin-backdrop-focus). */
+html.layout-desktop .itemDetailPage {
+  /* Image on the right (80% of the width) */
+  & .itemBackdrop {
+    position: relative !important;
+    display: block !important;
+    left: auto !important;
+    right: -20% !important;
+    width: 80vw !important;
+    height: var(--dfin-backdrop-height) !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    background-attachment: scroll !important;
+    background-position: var(--dfin-backdrop-focus) !important;
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
+  }
 
-/* Gradient on the left and bottom, drawn ON TOP of the image */
-html.layout-desktop .itemDetailPage .itemBackdrop::after {
-  content: "" !important;
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(90deg, rgb(24, 24, 24), rgba(24, 24, 24, 0) 60%),
-    linear-gradient(360deg, rgb(24, 24, 24), rgba(24, 24, 24, 0) 60%);
-}
+  /* Fade on the left and bottom, drawn ON TOP of the image */
+  & .itemBackdrop::after {
+    content: "" !important;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: var(--dfin-fade);
+  }
 
-/* The content rises over the image; its position does not depend on the image height */
-html.layout-desktop .itemDetailPage .detailPageWrapperContainer {
-  position: relative;
-  z-index: 1;
-  margin-top: calc(var(--dfin-content-top) - var(--dfin-backdrop-height)) !important;
-}
+  /* The content rises over the image; its position does not depend on the image height */
+  & .detailPageWrapperContainer {
+    position: relative;
+    z-index: 1;
+    margin-top: calc(var(--dfin-content-top) - var(--dfin-backdrop-height)) !important;
+  }
 
-/* The content blocks must not have an opaque background: in Jellyfin 12.x, when
-   the "banner" is on and "backdrops" are off (class noBackdropTransparency),
-   they get a solid background that cut the image. */
-html.layout-desktop .itemDetailPage .detailPageWrapperContainer,
-html.layout-desktop .itemDetailPage .detailPagePrimaryContainer,
-html.layout-desktop .itemDetailPage .detailPageSecondaryContainer,
-html.layout-desktop .itemDetailPage .detailPageContent,
-html.layout-desktop .itemDetailPage .detailPagePrimaryContent,
-html.layout-desktop .itemDetailPage .detailRibbon {
-  background: transparent !important;
-  background-color: transparent !important;
+  /* The content blocks must not have an opaque background: in 12.x, when the
+     "banner" is on and "backdrops" are off (class noBackdropTransparency),
+     they get a solid background that cut the image. */
+  & .detailPageWrapperContainer,
+  & .detailPagePrimaryContainer,
+  & .detailPageSecondaryContainer,
+  & .detailPageContent,
+  & .detailPagePrimaryContent,
+  & .detailRibbon {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
 }
 
 /* === 12.x FIX: fixed, visible and opaque top menu bar ===
-   In 12.x the bar is a Material UI AppBar that turns transparent when
-   the page is at the top. Here it is always solid and fixed.
-   Color, blur and border: --dfin-header-bg / --dfin-header-blur / --dfin-header-border
-   in :root, at the top of the file. */
-html:where(:not(.layout-mobile)) header.MuiAppBar-root,
-html:where(:not(.layout-mobile)) header.MuiAppBar-root.MuiAppBar-colorTransparent,
-html:where(:not(.layout-mobile)) header.MuiAppBar-root.MuiAppBar-colorDefault {
+   In 12.x the bar is a Material UI AppBar that turns transparent when the
+   page is at the top. Here it is always solid and fixed. Color, blur and
+   border: --dfin-header-* in :root. */
+html:where(:not(.layout-mobile)) :is(
+  header.MuiAppBar-root,
+  header.MuiAppBar-root.MuiAppBar-colorTransparent,
+  header.MuiAppBar-root.MuiAppBar-colorDefault
+) {
   position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
+  inset: 0 0 auto 0 !important;
   width: 100% !important;
-  z-index: 1300 !important;
+  z-index: var(--dfin-header-z) !important;
   transform: none !important;
   background-color: var(--dfin-header-bg) !important;
   background-image: none !important;
@@ -836,7 +823,7 @@ html:where(:not(.layout-mobile)) header.MuiAppBar-root.MuiAppBar-colorDefault {
   visibility: visible !important;
 }
 
-/* --- Backdrop container, Logo & Mask --- */
+/* --- Global backdrop container & background (non-detail pages) --- */
 :where(html:not(.layout-mobile)) .backdropContainer {
   height: 100vh;
   left: 20%;
@@ -845,9 +832,7 @@ html:where(:not(.layout-mobile)) header.MuiAppBar-root.MuiAppBar-colorDefault {
 }
 
 .layout-desktop .backgroundContainer {
-  background:
-    linear-gradient(90deg, rgb(24, 24, 24), rgba(24, 24, 24, 0) 60%),
-    linear-gradient(360deg, rgb(24, 24, 24), rgba(24, 24, 24, 0) 60%);
+  background: var(--dfin-fade);
   background-size: cover;
   height: 100vh;
   margin-left: 20%;
@@ -855,590 +840,619 @@ html:where(:not(.layout-mobile)) header.MuiAppBar-root.MuiAppBar-colorDefault {
   width: 80vw;
 }
 
-
-.layout-desktop .detailPageWrapperContainer {
-  margin-top: -65vh;
-}
-
 /* --- Seasons Images, Backdrops etc... --- */
+:where(html:not(.layout-mobile)) {
+  & #listChildrenCollapsible {
+    width: 100vw;
+  }
 
-:where(html:not(.layout-mobile)) #listChildrenCollapsible {
-  width: 100vw;
-}
-
-:where(html:not(.layout-mobile)) .vertical-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--Card-gap);
-  padding-inline: 1.5vw;
-}
-
-
-/* --- Element Hiding on Detail Page --- */
-.layout-desktop .detailImageContainer .card {
-  display: none;
+  & .vertical-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--Card-gap);
+    padding-inline: 1.5vw;
+  }
 }
 
 /* --- Text & Titles --- */
-.layout-desktop .itemName {
-  font-weight: var(--font-weight-normal);
-}
+:where(html:not(.layout-mobile)) {
+  & .infoText { /* Title size limit */
+    max-width: 150%;
+    min-width: 0;
+  }
 
-:where(html:not(.layout-mobile)) .infoText { /* Title size limit */
-  max-width: 150%;
-  min-width: 0;
-}
+  & h2 {
+    font-weight: var(--font-weight-bold);
+  }
 
-:where(html:not(.layout-mobile)) h2 { /* General H2 styling */
-  font-weight: var(--font-weight-bold);
-}
+  /* Nicer line breaks: balanced titles, no one-word last lines in paragraphs */
+  & :is(h1, h2, h3, .itemName, .tagline, .actionSheetTitle) {
+    text-wrap: balance;
+  }
 
-:where(html:not(.layout-mobile)) .section0 > h2:nth-child(1) {
-  text-shadow: var(--text-shadow-continue-watching);
-}
+  & :is(.overview, .detail-clamp-text, .detailSectionContent p) {
+    text-wrap: pretty;
+  }
 
-:where(html:not(.layout-mobile)) .itemName.originalTitle {
-  margin: .2em 0 .2em;
-  font-size: var(--font-size-small);
-  display: var(--display-original-title) !important;
-}
+  & .section0 > h2:nth-child(1) {
+    text-shadow: var(--text-shadow-continue-watching);
+  }
 
-/* --- Overview Link ("More") --- */
-.layout-desktop a.overview-expand.emby-button {
-  margin: 0;
-  padding: 0;
-}
+  & .itemName.originalTitle {
+    margin: .2em 0 .2em;
+    font-size: var(--font-size-small);
+    display: var(--display-original-title) !important;
+  }
 
-/* --- Sidebar Headers --- */
-:where(html:not(.layout-mobile)) .sidebarHeader {
-  font-size: 1em;
-  margin: 1em 0 .5em;
-  font-weight: var(--font-weight-bold);
-}
+  & .sidebarHeader {
+    font-size: 1em;
+    margin: 1em 0 .5em;
+    font-weight: var(--font-weight-bold);
+  }
 
-/* fix play arrow alignment on cards */
-:where(html:not(.layout-mobile)) span.material-icons.cardOverlayButtonIcon.cardOverlayButtonIcon-hover.play_arrow {
-  left: 0px;
-}
-
-:where(html:not(.layout-mobile)) .tagline {
+  & .tagline {
     font-size: 1.17em;
     font-weight: 500;
     font-style: italic;
-}
+  }
 
-/* admin dashboard: orange restart button */
-:where(html:not(.layout-mobile)) #btnRestartServer {
-  background: #bb7a4a;
+  /* Plot / description text */
+  & div.detailPageContent div.detailSectionContent p,
+  & .plot {
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+  }
+
+  & .detail-clamp-text { /* Clamped description text */
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
+    margin: unset !important;
+    margin-top: 0.75em !important; /* 12.x: restore the gap between buttons and synopsis */
+  }
+
+  & .itemGenres { /* hidden: the genre pills below replace it */
+    display: none;
+  }
+
+  /* admin dashboard: orange restart button */
+  & #btnRestartServer {
+    background: var(--theme-restart-color);
+  }
 }
 
 /* --- Pill-style Groups (Genres, Tags, etc.) --- */
-:where(html:not(.layout-mobile)) .itemDetailsGroup { /* Container for a group like "Genres: Action, Adventure" */
-  display: inline-block;
-  margin-bottom: 0.5rem;
-}
+:where(html:not(.layout-mobile)) {
+  & .itemDetailsGroup { /* e.g. "Genres: Action, Adventure" */
+    display: inline-block;
+    margin-bottom: 0.5rem;
+  }
 
-/* --- Pill-style Groups (Genres, Tags, etc.) --- */
-:where(html:not(.layout-mobile)) .itemDetailsGroup { /* Container for a group like "Genres: Action, Adventure" */
-  display: inline-block;
-  margin-bottom: 0.5rem;
-}
+  & .itemDetailsGroup .label {
+    font-weight: var(--font-weight-semibold);
+    color: var(--theme-text-color);
+    padding-right: 0.5rem;
+    display: inline;
+  }
 
-:where(html:not(.layout-mobile)) .itemDetailsGroup .label { /* e.g., "Genres:" */
-  font-weight: var(--font-weight-semibold);
-  color: var(--theme-text-color);
-  padding-right: 0.5rem;
-  display: inline;
-}
+  & .itemDetailsGroup .content { /* container for the actual pills/links */
+    font-size: 0 !important;
+    display: inline;
+  }
 
-:where(html:not(.layout-mobile)) .itemDetailsGroup .content { /* Container for the actual pills/links */
-  font-size: 0 !important;
-  display: inline;
-}
+  & .itemDetailsGroup .content a { /* individual pill */
+    display: inline-block;
+    font-size: 0.75rem !important;
+    font-weight: var(--font-weight-normal) !important;
+    background: var(--button-bg-subtle) !important;
+    padding: 3px 6px !important;
+    margin: 2px 4px 2px 0;
+    border-radius: var(--theme-roundness) !important;
+    color: inherit !important;
+    text-decoration: none !important;
+    transition: background-color 0.2s ease-out;
+  }
 
-:where(html:not(.layout-mobile)) .itemDetailsGroup .content a { /* Individual pill/link */
-  display: inline-block;
-  font-size: 0.75rem !important;
-  font-weight: var(--font-weight-normal) !important;
-  background: var(--button-bg-subtle) !important;
-  padding: 3px 6px !important;
-  margin: 2px 4px 2px 0;
-  border-radius: var(--theme-roundness) !important;
-  color: inherit !important;
-  text-decoration: none !important;
-  transition: background-color 0.2s ease-out;
-}
+  & .itemDetailsGroup .content a:hover {
+    background: var(--button-bg-subtle-hover) !important;
+  }
 
-:where(html:not(.layout-mobile)) .itemDetailsGroup .content a:hover {
-  background: var(--button-bg-subtle-hover) !important;
-}
+  /* --- Collapsible Tags (hover or keyboard focus to reveal) --- */
+  & .itemTags {
+    position: relative;
+    display: block;
+    margin: 0.7em 0 !important;
+    color: transparent !important;
+    line-height: 0;
+    cursor: pointer;
+    user-select: none;
+    max-height: 1.5em;
+    overflow: hidden;
+    padding-bottom: 20px;
+    transition: max-height 0.3s ease-out;
+  }
 
-/* --- Collapsible Tags (Hover to reveal) --- */
-:where(html:not(.layout-mobile)) .itemTags {
-  position: relative;
-  display: block;
-  margin: 0.7em 0 !important;
-  color: transparent !important;
-  line-height: 0;
-  cursor: pointer;
-  user-select: none;
-  max-height: 1.5em;
-  overflow: hidden;
-  padding-bottom: 20px;
-  transition: max-height 0.3s ease-out;
-}
+  & .itemTags::before {
+    content: var(--dfin-txt-tags-closed);
+    display: inline-block;
+    font-size: 0.92rem;
+    line-height: 1.4;
+    font-weight: var(--font-weight-semibold);
+    color: var(--theme-text-color);
+  }
 
-:where(html:not(.layout-mobile)) .itemTags::before {
-  content: "Hover to show tags ▸";
-  display: inline-block;
-  font-size: 0.92rem;
-  line-height: 1.4;
-  font-weight: var(--font-weight-semibold);
-  color: var(--theme-text-color);
-}
+  & .itemTags > a.button-link { /* individual tag */
+    opacity: 0;
+    font-size: 0.75rem !important;
+    line-height: normal;
+    background: var(--button-bg-subtle) !important;
+    padding: 3px 6px !important;
+    border-radius: var(--theme-roundness) !important;
+    margin: 0.25rem 0.5rem 0.25rem 0 !important;
+    color: var(--theme-text-color) !important;
+    text-decoration: none !important;
+    pointer-events: none;
+    display: inline-block;
+    transition: opacity 0.3s ease-out, background-color 0.2s ease-out;
+  }
 
-:where(html:not(.layout-mobile)) .itemTags > a.button-link { /* Individual tag link style */
-  opacity: 0;
-  font-size: 0.75rem !important;
-  line-height: normal;
-  background: var(--button-bg-subtle) !important;
-  padding: 3px 6px !important;
-  border-radius: var(--theme-roundness) !important;
-  margin: 0.25rem 0.5rem 0.25rem 0 !important;
-  color: var(--theme-text-color) !important;
-  text-decoration: none !important;
-  pointer-events: none;
-  display: inline-block;
-  transition: opacity 0.3s ease-out, background-color 0.2s ease-out;
-}
+  & .itemTags:is(:hover, :focus-within) {
+    line-height: normal;
+    max-height: 20em;
+  }
 
-:where(html:not(.layout-mobile)) .itemTags:hover {
-  line-height: normal;
-  max-height: 20em;
-}
+  & .itemTags:is(:hover, :focus-within)::before {
+    content: var(--dfin-txt-tags-open);
+  }
 
-:where(html:not(.layout-mobile)) .itemTags:hover::before {
-  content: "Tags ▾";
-}
+  & .itemTags:is(:hover, :focus-within) > a.button-link {
+    opacity: 1;
+    pointer-events: auto;
+  }
 
-:where(html:not(.layout-mobile)) .itemTags:hover > a.button-link {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-:where(html:not(.layout-mobile)) .itemTags:hover > a.button-link:hover {
-  background: var(--button-bg-subtle-hover) !important; /* Hover effect for individual tags */
+  & .itemTags:is(:hover, :focus-within) > a.button-link:hover {
+    background: var(--button-bg-subtle-hover) !important;
+  }
 }
 
 /* --- Cast & "More Like This" Sections --- */
-:where(html:not(.layout-mobile)) #castContent .cardOverlayButton-br {
+:where(html:not(.layout-mobile)) {
+  & #castContent .cardOverlayButton-br {
     bottom: 4%;
     right: 15%;
     width: 20%;
     top: 2px;
     left: 5px;
+  }
+
+  & #castContent .cardOverlayButton.cardOverlayButton-hover.itemAction.paper-icon-button-light {
+    margin: auto;
+  }
+
+  & #castContent .focusable,
+  & .similarCollapsible .itemsContainer.scrollSlider .focusable {
+    transform: scale(0.8) !important;
+    transform-origin: top left !important;
+    margin-right: 8px !important;
+  }
+
+  /* Context popup (e.g., three-dot menu) and toasts */
+  & .focuscontainer {
+    background-color: var(--theme-black-alpha-high);
+  }
+
+  & .toast.toastVisible {
+    background-color: var(--header-bg);
+    -webkit-backdrop-filter: var(--blur-effect) !important;
+    backdrop-filter: var(--blur-effect) !important;
+  }
 }
 
-:where(html:not(.layout-mobile)) #castContent .cardOverlayButton.cardOverlayButton-hover.itemAction.paper-icon-button-light {
-  margin: auto;
-}
+/* --- Play button text and alignment in mainDetailButtons --- */
+:where(html:not(.layout-mobile)) {
+  & .mainDetailButtons .material-icons.play_arrow::after {
+    content: var(--dfin-txt-play);
+    font-family: 'Rubik';
+    font-size: 16px;
+    position: absolute;
+    bottom: 15px;
+    width: inherit;
+    right: -39px;
+  }
 
-:where(html:not(.layout-mobile)) #castContent .focusable,
-:where(html:not(.layout-mobile)) 
-.similarCollapsible .itemsContainer.scrollSlider .focusable {
-  transform: scale(0.8) !important;
-  transform-origin: top left !important;
-  margin-right: 8px !important;
-}
+  & .material-icons.play_arrow::before {
+    margin-left: 0;
+  }
 
-/* --- Context Popup (e.g., three-dot menu) --- */
-:where(html:not(.layout-mobile)) .focuscontainer {
-  background-color: var(--theme-black-alpha-high);
-}
+  & .button-flat.btnPlay.detailButton.emby-button,
+  & .material-icons.detailButton-icon.play_arrow {
+    text-align: left;
+    width: 85px;
+    border-radius: 2em;
+    margin-left: 16px;
+  }
 
-/* Bottom-left toast popups */
-:where(html:not(.layout-mobile)) .toast.toastVisible {
-  background-color: var(--header-bg); /* Default for header-like elements */
-  backdrop-filter: var(--blur-effect) !important;
-  -webkit-backdrop-filter: var(--blur-effect) !important;
-}
-
-/* --- Plot/Description Text --- */
-:where(html:not(.layout-mobile)) div.detailPageContent div.detailSectionContent p,
-:where(html:not(.layout-mobile))  
-.plot { /* Specifically the plot */
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
-}
-
-:where(html:not(.layout-mobile)) .detail-clamp-text { /* Clamped description text */
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 5;
-  margin: unset !important; /* remove even more padding between description */
-  margin-top: 0.75em !important; /* 12.x: restore padding between buttons & synopsis */
-}
-
-:where(html:not(.layout-mobile)) .itemGenres { /* Explicitly hide the .itemGenres if tags are used or it's redundant */
-  display: none;
-}
-
-/* Play button text and alignment in mainDetailButtons */
-:where(html:not(.layout-mobile)) .mainDetailButtons .material-icons.play_arrow::after {
-  content: "Play";
-  font-family: 'Rubik';
-  font-size: 16px;
-  position: absolute;
-  bottom: 15px;
-  width: inherit;
-  right: -39px;
-}
-
-:where(html:not(.layout-mobile)) .material-icons.play_arrow:before { /* Icon itself */
-  margin-left: 0px;
-}
-
-:where(html:not(.layout-mobile)) .button-flat.btnPlay.detailButton.emby-button,
-:where(html:not(.layout-mobile)) 
-.material-icons.detailButton-icon.play_arrow { /* Styling for the play button and its icon */
-  text-align: left;
-  width: 85px;
-  border-radius: 2em;
-  margin-left: 16px;
-}
-
-.layout-desktop .btnPlay:hover { /* hover animation for the play button */
-  background-color: #00a5dc28;
-  transform: translateX(5px);
-}
-
-:where(html:not(.layout-mobile)) .detailButton-content,
-:where(html:not(.layout-mobile)) 
-.button-flat.btnPlay.detailButton.emby-button { /* Ensure content within the button is left-aligned */
-  justify-content: flex-start;
+  & .detailButton-content,
+  & .button-flat.btnPlay.detailButton.emby-button {
+    justify-content: flex-start;
+  }
 }
 
 /*--------------------------------------------------------------------------*/
 /* === LISTS & MENUS === */
 
-/* --- General List Item Hover --- */
-:where(html:not(.layout-mobile)) .listItem {
-  transition: 0.3s all ease-in-out;
-}
+:where(html:not(.layout-mobile)) {
+  /* No backdrop-filter on list hover: it is costly on long lists */
+  & .listItem {
+    transition: background-color 0.3s ease-in-out;
+  }
 
-:where(html:not(.layout-mobile)) .listItem:hover {
-  background-color: var(--theme-accent-color-alpha-med);
-  -webkit-backdrop-filter: var(--blur-effect);
-  backdrop-filter: var(--blur-effect);
-}
+  & .listItem:hover {
+    background-color: var(--theme-accent-color-alpha-med);
+  }
 
-/* --- Menu Item Hover (Action Sheets, Nav Menu) --- */
-:where(html:not(.layout-mobile)) .actionSheetMenuItem:hover,
-:where(html:not(.layout-mobile)) 
-.navMenuOption:hover {
-  background-color: var(--theme-accent-color-alpha-med);
-}
+  & .actionSheetMenuItem:hover,
+  & .navMenuOption:hover {
+    background-color: var(--theme-accent-color-alpha-med);
+  }
 
-/* --- Paper List Container (e.g., settings sections) --- */
-:where(html:not(.layout-mobile)) .paperList {
-  border-radius: var(--theme-roundness-xlarge);
-}
+  & .paperList {
+    border-radius: var(--theme-roundness-xlarge);
+  }
 
-/* --- Main Drawer (Sidebar) Padding --- */
-:where(html:not(.layout-mobile)) .mainDrawer-scrollContainer {
-  padding-top: 6vh;
-}
+  & .mainDrawer-scrollContainer {
+    padding-top: 6vh;
+  }
 
-/* --- Episode List Item Image (Legacy/Non-Grid View) --- */
-:where(html:not(.layout-mobile)) .listItemImage-large { /* Used for larger images in list views */
-  background-position: 50%;
-  height: 13vw;
-  margin-right: 0.23em;
-  width: 19.5vw;
+  /* Episode list item image (legacy / non-grid view) */
+  & .listItemImage-large {
+    background-position: 50%;
+    height: 13vw;
+    margin-right: 0.23em;
+    width: 19.5vw;
+  }
+
+  & div.filterDialogContent div.emby-collapse div.collapseContent {
+    background: var(--dfin-surface-dark);
+  }
+
+  /* Minor positioning tweaks for the centered context menus */
+  & .actionSheetText {
+    margin-top: 0;
+    margin-bottom: 1.2rem;
+    font-size: small;
+  }
+
+  & .actionSheetText,
+  & .actionSheetTitle {
+    flex-grow: 0;
+    padding: 0 1.25rem;
+    font-weight: 420;
+  }
+
+  /* Center specific context menus (e.g., Cast, SyncPlay) and size them with --dfin-menu-width */
+  & .dialogContainer .actionSheet.opened.actionsheet-not-fullscreen {
+    &.syncPlayGroupMenu,
+    &.centeredDialog:not(:has(button[data-id="edit"], button[data-id="delete"], button[data-id="addtocollection"], button[data-id="refresh"], button[data-id="download"])) {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      margin: 0 !important;
+      box-sizing: border-box;
+      border-radius: var(--theme-roundness-large) !important;
+      background-color: var(--header-bg) !important;
+      height: auto;
+      max-height: 85vh;
+      overflow-y: auto;
+      width: var(--dfin-menu-width) !important;
+    }
+  }
 }
 
 /*--------------------------------------------------------------------------*/
 /* === VIDEO PLAYER & SUBTITLES === */
 
-:where(html:not(.layout-mobile)) video.htmlvideoplayer::cue {
-  font-family: var(--font-family-video-cue) !important;
-  color: white !important;
-  text-shadow: var(--text-shadow-video-cue) !important;
-}
+:where(html:not(.layout-mobile)) {
+  & video.htmlvideoplayer::cue {
+    font-family: var(--font-family-video-cue) !important;
+    color: white !important;
+    text-shadow: var(--text-shadow-video-cue) !important;
+  }
 
-/* --- Track Selection Popup (Audio/Subtitle Choice) --- */
-:where(html:not(.layout-mobile)) .trackSelections {
-  /max-width: var(--track-selection-max-width);
-  min-width: var(--track-selection-min-width);
-  backdrop-filter: var(--blur-effect);
-  border-radius: var(--theme-roundness);
-  margin-top: 2.25rem !important;
+  /* Track selection popup (audio/subtitle choice) */
+  & .trackSelections {
+    min-width: var(--track-selection-min-width);
+    -webkit-backdrop-filter: var(--blur-effect);
+    backdrop-filter: var(--blur-effect);
+    border-radius: var(--theme-roundness);
+    margin-top: 2.25rem !important;
+  }
 }
-
-:where(html:not(.layout-mobile)) [dir="ltr"] .selectArrowContainer {
-  /right: -6.2em;
-}
-
-:where(html:not(.layout-mobile)) .detailTrackSelect {
-  /margin-right: -100px;}
 
 /*--------------------------------------------------------------------------*/
 /* === EPISODE GRID VIEW === */
 
-/* --- Grid Container --- */
-:where(html:not(.layout-mobile)) #childrenContent .itemsContainer.vertical-list,
-:where(html:not(.layout-mobile))  #childrenCollapsible .childrenItemsContainer {
+:where(html:not(.layout-mobile)) {
+  /* --- Grid container --- */
+  & #childrenContent .itemsContainer.vertical-list,
+  & #childrenCollapsible .childrenItemsContainer {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(var(--episode-grid-min-item-width), 1fr));
     gap: var(--episode-grid-gap);
     padding: var(--episode-grid-padding);
-    margin-right: 54vw !important; /*12: see if this fixes the grid view being too short*/
-  padding-left: 0vw !important;
-}
+    padding-left: 0 !important;
+    /* 12.x: keeps the grid from stretching across the whole page. Replaces the old
+       "margin-right: 54vw" hack, which squeezed the grid too much on narrow windows. */
+    box-sizing: border-box;
+    width: min(100%, var(--dfin-episode-grid-width));
+    margin-right: 0 !important;
+  }
 
-/* --- Individual Episode Item --- */
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage {
-  content-visibility: auto;
-  contain-intrinsic-size: var(--episode-grid-min-item-width) 280px;
-  display: block;
-  background: var(--episode-grid-bg);
-  border-radius: var(--theme-roundness);
-  overflow: hidden;
-  height: auto;
-  transition: background-color 0.2s ease-out;
-}
+  /* --- Individual episode item --- */
+  & .listItem.listItem-largeImage {
+    content-visibility: auto;
+    contain-intrinsic-size: auto var(--episode-grid-min-item-width) auto 280px;
+    display: block;
+    background: var(--episode-grid-bg);
+    border-radius: var(--theme-roundness);
+    overflow: hidden;
+    height: auto;
+    transition: background-color 0.2s ease-out;
+  }
 
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage:hover {
-  background-color: color-mix(in srgb, var(--episode-grid-bg) 90%, white);
-}
+  & .listItem.listItem-largeImage:hover {
+    background-color: color-mix(in srgb, var(--episode-grid-bg) 90%, white);
+  }
 
-/* --- Inner Content Wrapper for Grid Item --- */
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage .listItem-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: auto !important;
-  width: 100%;
-  padding: 0;
-}
+  & .listItem.listItem-largeImage .listItem-content {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch; /* image, title and buttons share the same box, so everything centers on the same axis */
+    height: auto !important;
+    width: 100%;
+    padding: 0;
+  }
 
-/* --- Episode Thumbnail --- */
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage .listItemImage {
-  width: 100% !important;
-  height: auto;
-  aspect-ratio: 16 / 9;
-  background-size: cover !important;
-  background-repeat: no-repeat !important;
-  background-position: center center;
-  position: relative;
-  margin-bottom: 0.5rem;
-  border-radius: var(--theme-roundness);
-  overflow: hidden;
-}
+  /* --- Thumbnail --- */
+  & .listItem.listItem-largeImage .listItemImage {
+    margin-inline: 0 !important; /* Jellyfin side margins would shift the image off the text column */
+    width: 100% !important;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
+    background-position: center center;
+    position: relative;
+    margin-bottom: 0.5rem;
+    border-radius: var(--theme-roundness);
+    overflow: hidden;
+  }
 
-/* --- Watched Indicator on Thumbnail --- */
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage .indicators { /* Container for indicators like 'played' */
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  z-index: 3; /* Above thumbnail image */
-}
+  /* --- Watched indicator on thumbnail --- */
+  & .listItem.listItem-largeImage .indicators {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 3; /* above the thumbnail image */
+  }
 
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage .playedIndicator {
-  border-radius: 50%; /* Make played indicator circular */
-}
+  & .listItem.listItem-largeImage .playedIndicator {
+    border-radius: 50%;
+  }
 
-/* --- Thumbnail Overlay Buttons (Play, More) --- */
-:where(html:not(.layout-mobile)) .listItemImageButton { /* Common style for buttons appearing on thumbnail hover */
-  opacity: 0;
-  pointer-events: none;
-  transform: scale(0.8);
-  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
-  position: absolute;
-  z-index: 2;
-  background: rgba(0, 0, 0, 0.75);
-  border-radius: 50%;
-  width: var(--button-overlay-size);
-  height: var(--button-overlay-size);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--theme-white-alpha-text-med);
-  border: none;
-  padding: 0;
-  font-size: var(--button-overlay-icon-size);
-}
+  /* --- Thumbnail overlay buttons (play, more) --- */
+  & .listItemImageButton {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.8);
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+    position: absolute;
+    z-index: 2;
+    background: var(--dfin-surface-dark);
+    border-radius: 50%;
+    width: var(--button-overlay-size);
+    height: var(--button-overlay-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--theme-white-alpha-text-med);
+    border: none;
+    padding: 0;
+    font-size: var(--button-overlay-icon-size);
+  }
 
-:where(html:not(.layout-mobile)) .listItemImageButton:hover {
-  background: var(--button-bg-overlay-hover);
-  color: var(--theme-white-alpha-text-high);
-}
+  & .listItemImageButton:hover {
+    background: var(--button-bg-overlay-hover);
+    color: var(--theme-white-alpha-text-high);
+  }
 
-:where(html:not(.layout-mobile)) .listItemImageButton .material-icons {
-  font-size: inherit;
-  line-height: 1;
-}
+  & .listItemImageButton .material-icons {
+    font-size: inherit;
+    line-height: 1;
+  }
 
-/* Positioning for specific overlay buttons */
-:where(html:not(.layout-mobile)) .listItemImageButton[data-action="play"],
-:where(html:not(.layout-mobile)) 
-.listItemImageButton[data-action="resume"] {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0.8);
-  width: calc(var(--button-overlay-size) * 1.5);
-  height: calc(var(--button-overlay-size) * 1.5);
-  font-size: calc(var(--button-overlay-icon-size) * 1.5);
-}
+  & .listItemImageButton[data-action="play"],
+  & .listItemImageButton[data-action="resume"] {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    width: calc(var(--button-overlay-size) * 1.5);
+    height: calc(var(--button-overlay-size) * 1.5);
+    font-size: calc(var(--button-overlay-icon-size) * 1.5);
+  }
 
-:where(html:not(.layout-mobile)) .listItemImageButton[data-action="menu"] {
-  bottom: 0.5rem;
-  right: 0.5rem;
-}
+  & .listItemImageButton[data-action="menu"] {
+    bottom: 0.5rem;
+    right: 0.5rem;
+  }
 
-/* Show buttons on thumbnail hover */
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage .listItemImage:hover .listItemImageButton {
-  opacity: 1;
-  pointer-events: auto;
-  transform: scale(1);
-}
+  /* The play icon stays centered in its circle. (The old "-5.5px" nudge used a very long
+     selector that only matched some thumbnails; simplifying it made it hit all of them
+     and pushed the triangle to the left.) */
+  & .listItemImageButton .listItemImageButton-icon {
+    position: static;
+    left: auto;
+  }
 
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage .listItemImage:hover .listItemImageButton[data-action="play"],
-:where(html:not(.layout-mobile)) 
-.listItem.listItem-largeImage .listItemImage:hover .listItemImageButton[data-action="resume"] {
-  transform: translate(-50%, -50%) scale(1);
-}
+  /* Show buttons on thumbnail hover */
+  & .listItem.listItem-largeImage .listItemImage:hover .listItemImageButton {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+  }
 
-/* --- Episode Title Block (Below Thumbnail) --- */
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage .listItemBody {
-  padding: 0 0.5rem 0.5rem 0.5rem;
-  text-align: center;
-  width: 100%;
-  box-sizing: border-box;
-}
+  & .listItem.listItem-largeImage .listItemImage:hover .listItemImageButton:is([data-action="play"], [data-action="resume"]) {
+    transform: translate(-50%, -50%) scale(1);
+  }
 
-/* --- Episode Title Text --- */
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage .listItemBody > .listItemBodyText:first-child {
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-  color: var(--theme-text-color-secondary) !important;
-  line-height: 1.3;
-  width: 100%;
-  padding: 0 5px;
-  box-sizing: border-box;
-  text-align: center;
-  display: -webkit-box !important;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: normal;
-  max-height: calc(1.3 * 3em);
-  min-height: calc(1.3 * 3em);
-  cursor: pointer;
-}
+  /* --- Episode title block (below the thumbnail) --- */
+  & .listItem.listItem-largeImage .listItemBody {
+    margin-inline: 0 !important;
+    padding: 0 0.5rem 0.5rem 0.5rem;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+  }
 
-/* --- Episode Action Buttons Container (Below Title) --- */
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage .listViewUserDataButtons {
-  display: flex;
-  justify-content: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0;
-}
+  & .listItem.listItem-largeImage .listItemBody > .listItemBodyText:first-child {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--theme-text-color-secondary) !important;
+    line-height: 1.3;
+    width: 100%;
+    padding: 0 5px;
+    box-sizing: border-box;
+    text-align: center;
+    display: -webkit-box !important;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    max-height: 3lh;
+    min-height: 3lh;
+    cursor: pointer;
+  }
 
-/* --- Individual Episode Action Buttons (e.g., Played, Info) --- */
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage .listViewUserDataButtons .listItemButton {
-  position: relative;
-  background: var(--button-bg-overlay);
-  border-radius: 50%;
-  width: var(--button-episode-action-size);
-  height: var(--button-episode-action-size);
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--theme-white-alpha-text-low);
-  transition: background-color 0.2s ease-out, color 0.2s ease-out;
-}
+  /* --- Episode action buttons (below the title) --- */
+  & .listItem.listItem-largeImage .listViewUserDataButtons {
+    display: flex;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0;
+  }
 
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage .listViewUserDataButtons .listItemButton:hover {
-  background: var(--button-bg-overlay-hover);
-  color: var(--theme-white-alpha-text-high);
-}
+  & .listItem.listItem-largeImage .listViewUserDataButtons .listItemButton {
+    position: relative;
+    background: var(--button-bg-overlay);
+    border-radius: 50%;
+    width: var(--button-episode-action-size);
+    height: var(--button-episode-action-size);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--theme-white-alpha-text-low);
+    transition: background-color 0.2s ease-out, color 0.2s ease-out;
+  }
 
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage .listViewUserDataButtons .listItemButton .material-icons {
-  font-size: var(--button-episode-action-icon-size);
-  line-height: 1;
-}
+  & .listItem.listItem-largeImage .listViewUserDataButtons .listItemButton:hover {
+    background: var(--button-bg-overlay-hover);
+    color: var(--theme-white-alpha-text-high);
+  }
 
-/* --- Episode Action Button Tooltips --- */
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage .listViewUserDataButtons .listItemButton::after {
-  content: attr(title);
-  position: absolute;
-  bottom: calc(100% + 5px);
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: var(--tooltip-bg);
-  color: var(--theme-text-color);
-  padding: 4px 8px;
-  border-radius: var(--theme-roundness);
-  font-size: 0.75rem;
-  line-height: 1.2;
-  white-space: nowrap;
-  z-index: 10;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity 0.2s ease-out, visibility 0.2s ease-out;
-  transition-delay: 0.3s;
-}
+  & .listItem.listItem-largeImage .listViewUserDataButtons .listItemButton .material-icons {
+    font-size: var(--button-episode-action-icon-size);
+    line-height: 1;
+  }
 
-/* Fallback content for tooltips if title attribute is missing */
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage .listViewUserDataButtons .listItemButton[data-action="link"]::after { content: "Details"; }
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage .listViewUserDataButtons .listItemButton[data-action="menu"]::after { content: "More"; }
+  /* --- Episode action button tooltips --- */
+  & .listItem.listItem-largeImage .listViewUserDataButtons .listItemButton::after {
+    content: attr(title);
+    position: absolute;
+    bottom: calc(100% + 5px);
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--tooltip-bg);
+    color: var(--theme-text-color);
+    padding: 4px 8px;
+    border-radius: var(--theme-roundness);
+    font-size: 0.75rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    z-index: 10;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease-out, visibility 0.2s ease-out;
+    transition-delay: 0.3s;
+  }
 
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage .listViewUserDataButtons .listItemButton:hover::after {
-  opacity: 1; /* Show tooltip on hover */
-  visibility: visible;
-}
+  /* Fixed texts for these two buttons */
+  & .listItem.listItem-largeImage .listViewUserDataButtons .listItemButton[data-action="link"]::after { content: var(--dfin-txt-details); }
+  & .listItem.listItem-largeImage .listViewUserDataButtons .listItemButton[data-action="menu"]::after { content: var(--dfin-txt-more); }
 
-/* --- Hide Unwanted Info in Episode Grid --- */
-:where(html:not(.layout-mobile)) .listItem.listItem-largeImage .listItem-overview,
-:where(html:not(.layout-mobile)) 
-.listItem.listItem-largeImage .listItem-bottomoverview,
-:where(html:not(.layout-mobile)) 
-.listItem.listItem-largeImage .listItemMediaInfo,
-:where(html:not(.layout-mobile)) 
-.listItem.listItem-largeImage .mediaSourceIndicator {
-  display: none !important; /* Remove elements not suitable for grid view */
+  & .listItem.listItem-largeImage .listViewUserDataButtons .listItemButton:hover::after {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* --- Hide info that doesn't fit the grid --- */
+  & .listItem.listItem-largeImage :is(.listItem-overview, .listItem-bottomoverview, .listItemMediaInfo, .mediaSourceIndicator) {
+    display: none !important;
+  }
 }
 
 /*--------------------------------------------------------------------------*/
 /* === MISCELLANEOUS & OVERRIDES === */
 
-/* --- Overflow Scroll Containers (Sliders) --- */
-:where(html:not(.layout-mobile)) .overflowBackdropCard[data-index="0"],
-:where(html:not(.layout-mobile)) 
-.overflowPortraitCard[data-index="0"],
-:where(html:not(.layout-mobile)) 
-.overflowSquareCard[data-index="0"] { /* First card in a slider */
-  margin-left: var(--overflow-card-margin-left);
+:where(html:not(.layout-mobile)) {
+  /* --- Overflow scroll containers (sliders) --- */
+  & :is(.overflowBackdropCard, .overflowPortraitCard, .overflowSquareCard)[data-index="0"] {
+    margin-left: var(--overflow-card-margin-left);
+  }
+
+  & :is(.overflowPortraitCard, .overflowSquareCard) {
+    width: var(--overflow-portrait-width);
+  }
+
+  & :is(.overflowBackdropCard, .overflowSmallBackdropCard) {
+    width: var(--overflow-backdrop-width);
+  }
+
+  /* --- Raised buttons/elements (pill shape) --- */
+  & .raised {
+    border-radius: var(--theme-roundness-full);
+  }
+
+  & #btnShutdown {
+    background-color: var(--theme-warning-color) !important;
+  }
+
+  & .sliderContainer {
+    height: 1em;
+  }
+
+  /* Scroller buttons: background for visibility */
+  & .emby-scrollbuttons-button {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+  }
+
+  & .emby-scrollbuttons-button .material-icons {
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  }
+
+  & .emby-scrollbuttons-button:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff;
+  }
 }
 
-:where(html:not(.layout-mobile)) .overflowPortraitCard,
-:where(html:not(.layout-mobile)) 
-.overflowSquareCard { /* Portrait and square cards in sliders */
-  width: var(--overflow-portrait-width);
-}
-
-:where(html:not(.layout-mobile)) .overflowBackdropCard,
-:where(html:not(.layout-mobile)) 
-.overflowSmallBackdropCard { /* Backdrop cards in sliders */
-  width: var(--overflow-backdrop-width);
-}
-
-/* --- General Button / Icon Hover Effects --- */
 @media (hover: hover) and (pointer: fine) {
   :where(html:not(.layout-mobile)) .paper-icon-button-light:hover:not(:disabled) {
     background-color: var(--theme-accent-color-alpha-low);
@@ -1446,287 +1460,30 @@ html:where(:not(.layout-mobile)) header.MuiAppBar-root.MuiAppBar-colorDefault {
   }
 }
 
-/* --- Raised Buttons/Elements (Pill Shape) --- */
-:where(html:not(.layout-mobile)) .raised {
-  border-radius: var(--theme-roundness-full);
+/* --- 12.x FIXES: detail ribbon (stacked vertically, restored position) --- */
+html.layout-desktop .detailRibbon:dir(ltr) {
+  padding-left: 0.75vw !important; /* overrides the JS-injected style */
+  background: none !important;
+  padding-bottom: 1vw !important;
+  padding-top: 3vw !important;
 }
 
-/* --- Specific Button Colors --- */
-:where(html:not(.layout-mobile)) #btnShutdown { /* Shutdown button */
-  background-color: var(--theme-warning-color) !important;
+html.layout-desktop .detailRibbon:dir(rtl) {
+  padding-right: 0.75vw !important;
+  padding-left: unset !important;
+  background: none !important;
 }
 
-/* --- Slider Element --- */
-:where(html:not(.layout-mobile)) .sliderContainer {
-  height: 1em;
-}
-
-/* Center specific context menus (e.g., Cast, SyncPlay) and adjust their width */
-:where(html:not(.layout-mobile)) .dialogContainer .focuscontainer.dialog.actionsheet-not-fullscreen.actionSheet.opened.centeredDialog:not(:has(button[data-id="edit"], button[data-id="delete"], button[data-id="addtocollection"], button[data-id="refresh"], button[data-id="download"])),
-:where(html:not(.layout-mobile)) 
-.dialogContainer .focuscontainer.dialog.actionsheet-not-fullscreen.actionSheet.opened.syncPlayGroupMenu {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    margin: 0 !important;
-    box-sizing: border-box;
-    border-radius: var(--theme-roundness-large) !important;
-    background-color: var(--header-bg) !important;height: auto;
-max-height: 85vh;
-overflow-y: auto;
-
-/* --- Responsive Width --- */
-/* Default for larger screens (tablets and desktops) */
-width: clamp(340px, 35vw, 600px) !important;}
-
-/* Minor positioning tweaks for those context menus */
-:where(html:not(.layout-mobile)) .actionSheetText {
-    margin-top: 0;
-    margin-bottom: 1.2rem;
-    font-size: small;
-}
-:where(html:not(.layout-mobile)) .actionSheetText,
-:where(html:not(.layout-mobile))  .actionSheetTitle {
-    -webkit-flex-grow: 0;
-    flex-grow: 0;
-    padding: 0 1.25rem;
-  font-weight: 420
-}
-
-:where(html:not(.layout-mobile)) div.filterDialogContent div.emby-collapse div.collapseContent {
-  background: rgba(0, 0, 0, 0.75);
-}
-
-/* Media query for smaller screens to adjust width for the targeted menus */
-@media (max-width: 767px) {
-    :where(html:not(.layout-mobile)) .dialogContainer .focuscontainer.dialog.actionsheet-not-fullscreen.actionSheet.opened.centeredDialog:not(:has(button[data-id="edit"], button[data-id="delete"], button[data-id="addtocollection"], button[data-id="refresh"], button[data-id="download"])),
-:where(html:not(.layout-mobile)) 
-    .dialogContainer .focuscontainer.dialog.actionsheet-not-fullscreen.actionSheet.opened.syncPlayGroupMenu {
-        width: clamp(280px, 85vw, calc(100vw - 30px)) !important;
-        background-color: black;
-    }
-}
-
-:where(html:not(.layout-mobile)) div.listItem-content div.listItemImage.listItemImage-large.itemAction.lazy.non-blurhashable.lazy-image-fadein button.listItemImageButton.itemAction.paper-icon-button-light span.material-icons.listItemImageButton-icon.play_arrow {
-  left: -5.5px;
-}
-
-/*--------------------------------------------------------------------------*/
-/* === RESPONSIVE ADJUSTMENTS === */
-
-/* --- Tablets and Up (min-width: 769px) --- */
-@media (min-width: 769px) {
-  :root:where(:not(.layout-mobile)) {
-    --button-overlay-size: 28px;
-    --button-overlay-icon-size: 17px;
-  }
-  :where(html:not(.layout-mobile)) div.cardScalable button.cardOverlayButton.cardOverlayButton-br.itemAction.paper-icon-button-light span.material-icons.cardOverlayButtonIcon.play_arrow {
-    display: none;
-  }
-}
-
-/* --- Smaller Tablets (max-width: 1024px) --- */
-@media (max-width: 1024px) {
-  :root:where(:not(.layout-mobile)) {
-    --episode-grid-min-item-width: 160px;
-    --track-selection-max-width: 40vw;
-    --track-selection-min-width: 140px;
-  }
-}
-
-:where(html:not(.layout-mobile)) .skinHeader.focuscontainer-x.skinHeader-withBackground.skinHeader-blurred {
-    background: none;
-   /background-color: rgba(10, 80, 160, 0.75);
-}
-
-:where(html:not(.layout-mobile)) .skinHeader.focuscontainer-x.skinHeader-withBackground.skinHeader-blurred.noHomeButtonHeader {
-    background: none;
-    background-color: rgba(190, 80, 10, 0);
-}
-
-  /* fix play button on show grid view (user's existing rule) */
-  :where(html:not(.layout-mobile)) div.listItem-content div.listItemImage.listItemImage-large.itemAction.lazy.non-blurhashable.lazy-image-fadein button.listItemImageButton.itemAction.paper-icon-button-light span.material-icons.listItemImageButton-icon.play_arrow {
-    left: -5.5px;
-    font-size: x-large;
-  }
-  :where(html:not(.layout-mobile)) .playedIndicator {
-    font-size: 125%;
-  }
-
-  /* Remove blur from header elements on smaller screens for performance/preference (user's existing rule) */
-  :where(html:not(.layout-mobile)) .skinHeader,
-:where(html:not(.layout-mobile)) 
-  .actionSheet,
-:where(html:not(.layout-mobile)) 
-  select:enabled,
-:where(html:not(.layout-mobile)) 
-  option {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    background-color: var(--bg-color);
-    backdrop-filter: var(--liquid-glass) !important;
-  }
-
-/* --- Very Small Phones (max-width: 480px) --- */
-@media (max-width: 480px) {
-  :root:where(:not(.layout-mobile)) {
-    --episode-grid-min-item-width: 120px;
-    --episode-grid-gap: 0.75rem;
-    --episode-grid-padding: 0.5rem;
-    --track-selection-max-width: 95vw;
-    --track-selection-min-width: 120px;
-    --overflow-portrait-width: 32vw;
-    --overflow-backdrop-width: 44vw;
-  }
-}
-
-/* self-tweak: remove blur on header */
-:where(html:not(.layout-mobile)) .skinHeader.semiTransparent,
-:where(html:not(.layout-mobile)) 
-.skinHeader,
-:where(html:not(.layout-mobile)) 
-.actionSheet,
-:where(html:not(.layout-mobile)) 
-select:enabled,
-:where(html:not(.layout-mobile)) 
-option {
-  background-color: var(--bg-color);
-  backdrop-filter: var(--liquid-glass) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-}
-
-:where(html:not(.layout-mobile)) .skinHeader .headerRight .paper-icon-button-light {
-    backdrop-filter: unset !important;
-    -webkit-backdrop-filter: unset !important;
-    background-color: transparent !important;
-
-}
-
-/* 12.x FIXES below. should see about re-arranging these at a later time. */
-/* restore position for ribbon */
-html.layout-desktop [dir="ltr"] .detailRibbon {
-    padding-left: 0.75vw !important; /* Overrides JS-injected style */
-    background: none !important;
-    padding-bottom: 1vw !important;
-    padding-top: 3vw !important;
-
-}
-
-/* Handle right-to-left layouts as well */
-html.layout-desktop [dir="rtl"] .detailRibbon {
-    padding-right: 0.75vw !important;
-    padding-left: unset !important;
-    background: none !important;
-}
-
-/* Force detail ribbon to stack vertically */
 :where(html:not(.layout-mobile)) .detailRibbon {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
 }
-
-/* Add background and drop shadow to scroller buttons for visibility */
-:where(html:not(.layout-mobile)) .emby-scrollbuttons-button {
-    background-color: rgba(0, 0, 0, 0.3);
-    border-radius: 50%;
-    backdrop-filter: blur(2px);
-}
-
-:where(html:not(.layout-mobile)) .emby-scrollbuttons-button .material-icons {
-    color: rgba(255, 255, 255, 0.9);
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
-}
-
-:where(html:not(.layout-mobile)) .emby-scrollbuttons-button:hover {
-    background-color: rgba(0, 0, 0, 0.5);
-    color: #fff;
-}
-
-/* Make the section header a flex container to align title and buttons */
-.layout-desktop .moreFromSeasonSection {
-    display: block;
-    align-items: center; /* Vertically align title and buttons */
-    /* Adjust padding if necessary, e.g., remove default padding if it interferes */
-    padding-bottom: 0.5em; /* Add some space below the header line */
-}
-
-/* Adjust the section title's spacing */
-.layout-desktop .moreFromSeasonSection .sectionTitle {
-    /* Override inline and default padding */
-    padding-right: 0.5em !important; /* Add small space between title and buttons */
-    margin-bottom: 0; /* Remove default bottom margin */
-    /* Prevent title from shrinking/growing if needed, adjust as necessary */
-    flex-shrink: 0;
-}
-
-/* Adjust the scroll buttons container's spacing */
-.layout-desktop .moreFromSeasonSection .emby-scrollbuttons {
-    padding-right: 0 !important; /* Remove default right padding */
-    /* Ensure buttons stay in line and don't wrap */
-    flex-shrink: 0;
-}
-
-:where(html:not(.layout-mobile)) .emby-scrollbuttons {
-  /margin-right: 78vw !important;
-}
-
-/*--------------------------------------------------------------------------*/
-/* === PHONES (max-width: 900px) === */
-
-@media (max-width: 900px) {
-  :root:where(:not(.layout-mobile)) {
-    --episode-grid-min-item-width: 140px;
-    --episode-grid-gap: 1rem;
-    --episode-grid-padding: 1rem;
-    --track-selection-max-width: 80vw;
-    --track-selection-min-width: 140px;
-    --overflow-portrait-width: 24vw;
-    --overflow-backdrop-width: 36vw;
-    --overflow-card-margin-left: 3vw;/* Remove desktop-specific layout vars from mobile */
-    /* --detail-page-primary-width: 90%; */
-    /* --detail-page-content-offset: -75vh; */
-  }
-
-  /* hide play icons on cards and portraits as it's not really necessary on mobile */
-  :where(html:not(.layout-mobile)) div.itemsContainer.scrollSlider.focuscontainer-x div.card.overflowBackdropCard.card-withuserdata div.cardBox.cardBox-bottompadded div.cardScalable button.cardOverlayButton.cardOverlayButton-br.itemAction.paper-icon-button-light {
-    /display: none;
-  }
-  :where(html:not(.layout-mobile)) div.card.overflowPortraitCard.card-withuserdata div.cardBox.cardBox-bottompadded div.cardScalable button.cardOverlayButton.cardOverlayButton-br.itemAction.paper-icon-button-light span.material-icons.cardOverlayButtonIcon.play_arrow {
-    display: none;
-  }
-
-
-/* --- Home Section Container Positioning --- */
-/* Apply default positioning */
-    /*body > #reactRoot .mainAnimatedPages .page.homePage .tabContent#homeTab .homeSectionsContainer {
-      position: relative !important;
-      margin-top: unset !important;
-      top: 10vh !important;
-      z-index: 6;
-      padding-top: 1em;
-      width: 100%;
-      box-sizing: border-box;
-    }*/
-
-}
-/* (closes the @media (max-width: 900px) above, which was left open in the original theme) */
 
 /*--------------------------------------------------------------------------*/
 /* === DARK-FIN 12.x EXTRAS (polish) ===
    Everything here is optional and independent: any block can be deleted
    without affecting the rest of the theme. */
-
-/* Sharper text and native controls (select, scrollbar) in dark mode */
-:root:where(:not(.layout-mobile)) {
-  color-scheme: dark;
-}
-html:where(:not(.layout-mobile)) {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
 
 /* Text selection in the theme accent color */
 :where(html:not(.layout-mobile)) ::selection {
@@ -1735,28 +1492,22 @@ html:where(:not(.layout-mobile)) {
 }
 
 /* Visible focus ring, for keyboard navigation only (does not show with the mouse) */
-:where(html:not(.layout-mobile)) a:focus-visible,
-:where(html:not(.layout-mobile)) 
-button:focus-visible,
-:where(html:not(.layout-mobile)) 
-select:focus-visible,
-:where(html:not(.layout-mobile)) 
-input:focus-visible,
-:where(html:not(.layout-mobile)) 
-textarea:focus-visible,
-:where(html:not(.layout-mobile)) 
-[tabindex]:not([tabindex="-1"]):focus-visible {
+:where(html:not(.layout-mobile)) :is(a, button, select, input, textarea, [tabindex]:not([tabindex="-1"])):focus-visible {
   outline: 2px solid var(--dfin-focus-ring) !important;
   outline-offset: 2px !important;
 }
 
-/* Thin, discreet scrollbars */
-:where(html:not(.layout-mobile)) * {
-  scrollbar-width: thin;
+/* Thin, discreet scrollbars (scrollbar-color is inherited from html) */
+:where(html:not(.layout-mobile)) {
   scrollbar-color: var(--dfin-scroll-thumb) transparent;
-}
-:where(html:not(.layout-mobile)) *:hover {
-  scrollbar-color: var(--dfin-scroll-thumb-hover) transparent;
+
+  & * {
+    scrollbar-width: thin;
+  }
+
+  & :is(.scrollY, .scrollX, .emby-scroller, .actionSheetScroller, .mainDrawer-scrollContainer):hover {
+    scrollbar-color: var(--dfin-scroll-thumb-hover) transparent;
+  }
 }
 
 /* Detail page (desktop): smooth content entrance */
@@ -1766,36 +1517,103 @@ textarea:focus-visible,
     transform: translateY(var(--dfin-enter-distance));
   }
 }
-html.layout-desktop .itemDetailPage .detailRibbon,
-html.layout-desktop .itemDetailPage .detailPagePrimaryContent {
-  animation: dfin-rise 0.5s ease-out backwards;
-}
-html.layout-desktop .itemDetailPage .detailPagePrimaryContent {
-  animation-delay: 0.08s;
-}
 
-/* Readable text when it passes over the image */
-html.layout-desktop .itemDetailPage .itemName,
-html.layout-desktop .itemDetailPage .itemMiscInfo,
-html.layout-desktop .itemDetailPage .tagline,
-html.layout-desktop .itemDetailPage .overview {
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+html.layout-desktop .itemDetailPage {
+  & .detailRibbon,
+  & .detailPagePrimaryContent {
+    animation: dfin-rise 0.5s ease-out backwards;
+  }
+
+  & .detailPagePrimaryContent {
+    animation-delay: 0.08s;
+  }
+
+  /* Readable text when it passes over the image */
+  & .itemName,
+  & .itemMiscInfo,
+  & .tagline,
+  & .overview {
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+  }
 }
 
 /* Respects users who prefer less motion in their system settings */
 @media (prefers-reduced-motion: reduce) {
-  :where(html:not(.layout-mobile)) *,
-:where(html:not(.layout-mobile)) 
-  *::before,
-:where(html:not(.layout-mobile)) 
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-delay: 0s !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  :where(html:not(.layout-mobile)) {
+    & *,
+    & *::before,
+    & *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0s !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
+/*--------------------------------------------------------------------------*/
+/* === RESPONSIVE ADJUSTMENTS (ordered from the widest to the narrowest,
+       so the narrower ones win) === */
+
+/* Centered context menus on narrow windows */
+@media (max-width: 767px) {
+  :root:where(:not(.layout-mobile)) {
+    --dfin-menu-width: clamp(280px, 85vw, calc(100vw - 30px));
+  }
+}
+
+/* --- Tablets and up (min-width: 769px) --- */
+@media (min-width: 769px) {
+  :root:where(:not(.layout-mobile)) {
+    --button-overlay-size: 28px;
+    --button-overlay-icon-size: 17px;
+  }
+
+  :where(html:not(.layout-mobile)) .cardOverlayButton-br .cardOverlayButtonIcon.play_arrow {
+    display: none;
+  }
+}
+
+/* --- Smaller screens (max-width: 1024px): lighter header, no blur (performance) --- */
+@media (max-width: 1024px) {
+  :root:where(:not(.layout-mobile)) {
+    --episode-grid-min-item-width: 160px;
+    --track-selection-min-width: 140px;
+    --dfin-glass-bg: var(--header-bg);
+    --dfin-glass-filter: none;
+  }
+}
+
+/* --- Phones in the desktop layout (max-width: 900px) --- */
+@media (max-width: 900px) {
+  :root:where(:not(.layout-mobile)) {
+    --episode-grid-min-item-width: 140px;
+    --episode-grid-gap: 1rem;
+    --episode-grid-padding: 1rem;
+    --track-selection-min-width: 140px;
+    --overflow-portrait-width: 24vw;
+    --overflow-backdrop-width: 36vw;
+    --dfin-episode-grid-width: 100%;
+    --overflow-card-margin-left: 3vw;
+  }
+
+  /* play icons on portrait cards are not needed on small screens */
+  :where(html:not(.layout-mobile)) .overflowPortraitCard .cardOverlayButton-br .cardOverlayButtonIcon.play_arrow {
+    display: none;
+  }
+}
+
+/* --- Very small phones (max-width: 480px) --- */
+@media (max-width: 480px) {
+  :root:where(:not(.layout-mobile)) {
+    --episode-grid-min-item-width: 120px;
+    --episode-grid-gap: 0.75rem;
+    --episode-grid-padding: 0.5rem;
+    --track-selection-min-width: 120px;
+    --overflow-portrait-width: 32vw;
+    --overflow-backdrop-width: 44vw;
+  }
+}
 
 /*#####################################################################################################################
    LAYOUT MOBILE  (Dark-Fin Mobile - Jellyfin 12.x, compatible with the "Modern" and "Legacy mobile" layouts)
@@ -1803,8 +1621,8 @@ html.layout-desktop .itemDetailPage .overview {
    ISOLATION BETWEEN DEFAULT AND MOBILE
    * Everything in this section starts with html.layout-mobile / :root.layout-mobile -> it does not affect
      desktop or TV.
-   * Everything else in the file (the default theme) gets the :where(html:not(.layout-mobile)) prefix -> it does
-     not affect mobile. :where() has zero specificity, so desktop stays exactly the same.
+   * Everything above (the default theme) is nested under :where(html:not(.layout-mobile)) -> it does not
+     affect mobile. :where() has zero specificity, so desktop stays exactly the same.
    * To edit the mobile look, only touch this section (--m-* variables at the start of it).
   ######################################################################################################################*/
 
@@ -1812,16 +1630,15 @@ html.layout-desktop .itemDetailPage .overview {
    1. VARIABLES (same names as Dark-Fin; edit freely)
    ========================================================================== */
 :root.layout-mobile {
+  color-scheme: dark;
+  accent-color: var(--theme-accent-color);
+
   /* Colors */
   --theme-background-color: #181818;
   --theme-text-color: #eee;
   --theme-text-color-secondary: #dbdbdb;
   --theme-accent-color: #00a5dc;
-  --theme-accent-color-alpha-med: #00a5dc28;
-  --theme-accent-color-alpha-high: #00a5dc93;
-  --theme-white-alpha-low: rgba(255, 255, 255, 0.08);
-  --theme-white-alpha-med: rgba(255, 255, 255, 0.1);
-  --theme-white-alpha-high: rgba(255, 255, 255, 0.16);
+  --theme-accent-color-alpha-med: color-mix(in srgb, var(--theme-accent-color) 16%, transparent);
   --theme-black-alpha-med: rgba(0, 0, 0, 0.55);
   --card-bg: #101010;
   --header-bg: rgba(16, 16, 16, 0.72);
@@ -1836,578 +1653,638 @@ html.layout-desktop .itemDetailPage .overview {
   --theme-roundness-full: 4em;
   --border-subtle: 1px solid rgba(255, 255, 255, 0.08);
 
-  /* Effects (Dark-Fin had "/--blur-intensity", which was ignored) */
+  /* Effects */
   --m-blur: blur(12px) saturate(160%);
 
   /* Font */
   --font-family-base: "Rubik", sans-serif;
 
-  /* Mobile measurements */
+  /* Mobile measurements (svh = height with the browser bars visible: no layout jump on scroll) */
   --m-side: 1rem;                 /* side margin of the pages */
   --m-gap: 0.6rem;                /* space between cards in the carousels */
   --m-appbar: 48px;               /* top bar height (MUI dense) */
-  --m-backdrop-h: 54vh;           /* backdrop height on the detail page */
-  --m-logo-h: 18vh;               /* maximum logo height over the backdrop */
+  --m-backdrop-h: 54svh;          /* backdrop height on the detail page */
+  --m-logo-h: 18svh;              /* maximum logo height over the backdrop */
   --m-poster-w: 46vw;             /* poster width when there is no logo */
   --m-title-when-logo: none;      /* none = hides the title if a logo exists; block = shows it */
-  --m-misc-offset: 0.9rem;        /* espaço acima da linha ano / nota / duração (com logo) */
+  --m-misc-offset: 0.9rem;        /* space above the year / rating / runtime row (with logo) */
   --card-portrait-w: 31vw;        /* width of portrait cards (Movies, Shows) */
   --card-backdrop-w: 62vw;        /* width of landscape cards (Continue Watching) */
   --card-square-w: 38vw;
 }
 
-/* ==========================================================================
-   2. BASE
-   ========================================================================== */
 html.layout-mobile {
+  /* ==========================================================================
+     2. BASE
+     ========================================================================== */
   background-color: var(--theme-background-color) !important;
   color: var(--theme-text-color);
   font-family: var(--font-family-base);
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
-}
 
-html.layout-mobile body,
-html.layout-mobile .MuiTypography-root,
-html.layout-mobile .MuiButton-root,
-html.layout-mobile button,
-html.layout-mobile input,
-html.layout-mobile select,
-html.layout-mobile textarea {
-  font-family: var(--font-family-base);
-}
+  & body,
+  & .MuiTypography-root,
+  & .MuiButton-root,
+  & button,
+  & input,
+  & select,
+  & textarea {
+    font-family: var(--font-family-base);
+  }
 
-/* App background: the global backdrop is not used on mobile (the image comes from .itemBackdrop) */
-html.layout-mobile .backgroundContainer,
-html.layout-mobile .backgroundContainer.withBackdrop {
-  background: var(--theme-background-color) !important;
-  opacity: 1;
-}
+  /* App background: the global backdrop is not used on mobile (the image comes from .itemBackdrop) */
+  & .backgroundContainer,
+  & .backgroundContainer.withBackdrop {
+    background: var(--theme-background-color) !important;
+    opacity: 1;
+  }
 
-html.layout-mobile .backdropContainer {
-  display: none !important;
-}
+  & .backdropContainer {
+    display: none !important;
+  }
 
-/* Respects the notch / gesture bar */
-html.layout-mobile .libraryPage,
-html.layout-mobile .page {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* Respects the notch / gesture bar */
+  & .libraryPage,
+  & .page {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    /* landscape: content stays clear of the notch (needs viewport-fit=cover; otherwise it is 0) */
+    padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
+  }
+
+  /* Nicer line breaks */
+  & :is(h1, h2, h3, .itemName, .tagline, .actionSheetTitle) {
+    text-wrap: balance;
+  }
+
+  & :is(.overview, .detailSectionContent p) {
+    text-wrap: pretty;
+  }
+
+  /* ==========================================================================
+     3. TOP BAR AND SIDE MENU ("Modern" layout / MUI)
+     ========================================================================== */
+  & header.MuiAppBar-root {
+    background-color: var(--header-bg) !important;
+    background-image: none !important;
+    -webkit-backdrop-filter: var(--m-blur);
+    backdrop-filter: var(--m-blur);
+    box-shadow: none !important;
+    border-bottom: var(--border-subtle);
+  }
+
+  /* On the detail page the bar is transparent over the backdrop */
+  &:has(#itemDetailPage:not(.hide)) header.MuiAppBar-root {
+    background-color: transparent !important;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-bottom-color: transparent;
+  }
+
+  & header.MuiAppBar-root .MuiIconButton-root {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+  }
+
+  & .MuiDrawer-paper {
+    background-color: var(--sidebar-bg) !important;
+    background-image: none !important;
+    -webkit-backdrop-filter: var(--m-blur);
+    backdrop-filter: var(--m-blur);
+    border-right: var(--border-subtle);
+    border-radius: 0 var(--theme-roundness-large) var(--theme-roundness-large) 0;
+  }
+
+  & .MuiDrawer-paper .MuiListItemButton-root,
+  & .MuiDrawer-paper .MuiListItem-root > a {
+    border-radius: var(--theme-roundness);
+    margin: 0 0.5rem;
+  }
+
+  & .MuiDrawer-paper .Mui-selected {
+    background-color: var(--theme-accent-color-alpha-med) !important;
+    color: var(--theme-accent-color);
+  }
+
+  /* ==========================================================================
+     4. SECTION TITLES AND CAROUSELS
+     ========================================================================== */
+  & .sectionTitle {
+    font-size: 1.3rem !important;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+  }
+
+  & .verticalSection {
+    margin-bottom: 1.4rem;
+  }
+
+  & .padded-left {
+    padding-left: var(--m-side) !important;
+  }
+
+  & .padded-right {
+    padding-right: var(--m-side) !important;
+  }
+
+  /* Carousels: side margin, snap and breathing room at the end */
+  & .emby-scroller,
+  & .scrollX {
+    padding-left: var(--m-side);
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: var(--m-side);
+  }
+
+  & .itemsContainer:not(.vertical-wrap):not(.vertical-list) {
+    column-gap: var(--m-gap);
+  }
+
+  & .itemsContainer:not(.vertical-wrap):not(.vertical-list)::after {
+    content: "";
+    flex: 0 0 var(--m-side);
+  }
+
+  & .overflowPortraitCard,
+  & .overflowBackdropCard,
+  & .overflowSquareCard {
+    scroll-snap-align: start;
+    margin-left: 0 !important;
+  }
+
+  & .overflowPortraitCard { width: var(--card-portrait-w) !important; }
+  & .overflowBackdropCard { width: var(--card-backdrop-w) !important; }
+  & .overflowSquareCard   { width: var(--card-square-w) !important; }
+
+  /* Grids (Movies, Shows, Favorites): 3 portrait columns / 2 landscape */
+  & .vertical-wrap {
+    gap: var(--m-gap);
+    padding-left: var(--m-side);
+    padding-right: var(--m-side);
+    justify-content: flex-start;
+  }
+
+  & .vertical-wrap > .portraitCard { width: calc((100% - var(--m-gap) * 2) / 3) !important; }
+  & .vertical-wrap > .backdropCard { width: calc((100% - var(--m-gap)) / 2) !important; }
+  & .vertical-wrap > .squareCard   { width: calc((100% - var(--m-gap)) / 2) !important; }
+
+  /* ==========================================================================
+     5. CARDS
+     ========================================================================== */
+  & .cardScalable {
+    border-radius: var(--theme-roundness-large) !important;
+    border: var(--border-subtle) !important;
+    background: var(--card-bg);
+    overflow: hidden !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  }
+
+  & .cardBox-bottompadded {
+    margin-bottom: 0.25rem !important;
+  }
+
+  & .cardText {
+    font-size: 0.82rem;
+    line-height: 1.35;
+  }
+
+  & .cardText-secondary {
+    opacity: 0.7;
+    font-size: 0.74rem;
+  }
+
+  & .indicator {
+    font-size: 70%;
+  }
+
+  & .cardIndicators > .indicator {
+    border-radius: var(--theme-roundness);
+  }
+
+  /* Item count badge: white text */
+  & .countIndicator,
+  & .countIndicator * {
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+  }
+
+  & .itemProgressBar {
+    height: 4px;
+    border-radius: 10px;
+    background: var(--theme-black-alpha-med);
+  }
+
+  & .itemProgressBarForeground {
+    background: var(--theme-accent-color);
+    border-radius: 10px;
+  }
+
+  /* The small play button goes away (tapping the card already opens it); the three-dot menu stays */
+  & .cardOverlayButton-br:not([data-action="menu"]) {
+    display: none !important;
+  }
+
+  & .cardOverlayButton-br[data-action="menu"] {
+    background: rgba(0, 0, 0, 0.45);
+    border-radius: var(--theme-roundness-full);
+    width: 28px;
+    height: 28px;
+    right: 0.35rem;
+    bottom: 0.35rem;
+  }
+
+  & .cardOverlayButton-br[data-action="menu"] .cardOverlayButtonIcon {
+    font-size: 1.1rem;
+  }
+
+  /* ==========================================================================
+     6. DETAIL PAGE
+     ========================================================================== */
+  /* Backdrop: on mobile it is .itemBackdrop (filled by Jellyfin only in the mobile layout) */
+  & .itemBackdrop {
+    display: block !important;
+    height: var(--m-backdrop-h);
+    background-position: top center;
+    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+  }
+
+  /* Logo (clearlogo) over the bottom of the backdrop */
+  & .detailLogo {
+    display: block;
+    position: absolute;
+    z-index: 2;
+    left: var(--m-side);
+    right: auto;
+    width: calc(100vw - var(--m-side) * 2);
+    height: var(--m-logo-h);
+    top: calc(var(--m-backdrop-h) - var(--m-logo-h) - 4svh - var(--m-appbar));
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+  }
+
+  & .detailLogo.hide {
+    display: none !important;
+  }
+
+  /* Content rises a bit over the end of the backdrop */
+  & .detailPageWrapperContainer {
+    display: block;
+    position: relative;
+    z-index: 1;
+    margin-top: -4svh !important;
+    padding-top: 0;
+  }
+
+  & .detailPageWrapperContainer,
+  & .detailPagePrimaryContainer,
+  & .detailPageSecondaryContainer {
+    background: transparent !important;
+  }
+
+  & .detailPagePrimaryContainer,
+  & .detailPagePrimaryContent,
+  & .detailPageSecondaryContainer {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+    padding-inline: var(--m-side) !important;
+  }
+
+  & .detailPageSecondaryContainer {
+    padding-top: 0.5rem !important;
+    padding-inline: 0 !important;   /* the carousels already have their own margin */
+  }
+
+  /* With logo: the title and poster are hidden. Without logo: poster centered over the backdrop. */
+  & .detailLogo:not(.hide) ~ .detailPageWrapperContainer .nameContainer h1 {
+    display: var(--m-title-when-logo);
+  }
+
+  & .detailLogo:not(.hide) ~ .detailPageWrapperContainer .detailImageContainer {
+    display: none;
+  }
+
+  & .detailLogo.hide ~ .detailPageWrapperContainer {
+    margin-top: -26svh !important;
+  }
+
+  & .detailImageContainer {
+    display: flex;
+    justify-content: center;
+    padding: 0 !important;
+  }
+
+  & .detailImageContainer .card {
+    display: block !important;
+    position: relative !important;
+    float: none;
+    top: 0;
+    left: 0;
+    width: var(--m-poster-w) !important;
+    max-width: 60vw;
+    margin: 0 auto 0.75rem;
+    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
+  }
+
+  /* Title, info and buttons centered */
+  & .detailRibbon {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center;
+    background: none !important;
+    padding: 0 var(--m-side) !important;
+    position: relative;
+    margin-top: 0;
+  }
+
+  & .nameContainer {
+    text-align: center;
+  }
+
+  & .nameContainer h1,
+  & .itemName {
+    font-size: 1.55rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0.25rem 0;
+  }
+
+  & .itemMiscInfo,
+  & .mediaInfoItems {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem 0.6rem;
+    font-size: 0.82rem;
+  }
+
+  /* Year / rating / runtime row: a little lower so it doesn't sit right on the title or logo */
+  & .itemMiscInfo-primary {
+    margin-top: var(--m-misc-offset);
+  }
+
+  & .detailLogo.hide ~ .detailPageWrapperContainer .itemMiscInfo-primary {
+    margin-top: 0.4rem;           /* no logo: the text title already has its own margin */
+  }
+
+  /* Jellyfin reserves ~37.5% of left padding in .infoWrapper for the poster, even when the
+     poster is hidden. That squeezed the year / runtime / ratings row into the right side of
+     the screen and made it wrap when there were 2+ ratings. Remove it (both text directions)
+     so the row is centered on the full width. */
+  & .infoWrapper {
+    padding-inline: 0 !important;
+    width: 100%;
+    max-width: 100%;
+    align-self: stretch;
+  }
+
+  /* Spacing comes from the row gap; drop the default 1em right margin of each item */
+  & .itemMiscInfo .mediaInfoItem,
+  & .mediaInfoItems .mediaInfoItem {
+    margin: 0 !important;
+  }
+
+  & .mainDetailButtons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.35rem;
+    left: 0 !important;
+    padding-top: 0.75rem;
+    margin: 0;
+  }
+
+  & .detailButton {
+    min-width: 2.75rem;
+    height: 2.75rem;
+    margin: 0 !important;
+    border-radius: var(--theme-roundness-full);
+  }
+
+  & .btnPlay.detailButton {
+    background: var(--theme-accent-color);
+    color: #fff;
+    padding: 0 1.25rem;
+  }
+
+  /* Audio / subtitles: single column, full width */
+  & .trackSelections {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-width: 100% !important;
+    margin: 1rem 0 0.5rem;
+  }
+
+  & .trackSelections .selectContainer {
+    width: 100%;
+    margin: 0;
+  }
+
+  & .detailTrackSelect {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    background: var(--button-bg-subtle);
+    border: var(--border-subtle);
+    border-radius: var(--theme-roundness);
+    font-size: 0.9rem;
+    text-overflow: ellipsis;
+  }
+
+  /* Overview */
+  & .detailSectionContent {
+    text-align: left;
+  }
+
+  & .tagline {
+    font-size: 1.05rem;
+    font-style: italic;
+    margin: 0.75rem 0 0.4rem;
+  }
+
+  & .overview {
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--theme-text-color-secondary);
+  }
+
+  /* Genres, Director, Studios... (12.x React component) */
+  & .itemDetailsGroup {
+    display: block;
+    margin: 0.75rem 0;
+  }
+
+  & .itemDetailsGroup .detailsGroupItem {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  & .itemDetailsGroup .label {
+    flex: 0 0 100%;
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    opacity: 0.65;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* .content = older markup; .detailsGroupItem > .focuscontainer-x = 12.x markup */
+  & .itemDetailsGroup .content,
+  & .itemDetailsGroup .detailsGroupItem > .focuscontainer-x {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    font-size: 0;                                             /* hides the commas */
+  }
+
+  & .itemDetailsGroup .content a,
+  & .itemDetailsGroup .detailsGroupItem > .focuscontainer-x a {
+    font-size: 0.78rem !important;
+    padding: 0.3rem 0.7rem;
+    background: var(--button-bg-subtle);
+    border-radius: var(--theme-roundness-full);
+    color: var(--theme-text-color);
+    text-decoration: none;
+  }
+
+  /* Tags / external links in a wrapping row */
+  & .itemExternalLinks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+  }
+
+  /* Cast, "More Like This", etc. */
+  & #itemDetailPage .detailVerticalSection,
+  & #itemDetailPage .verticalSection {
+    padding-inline: 0;
+  }
+
+  & #itemDetailPage .sectionTitle {
+    padding-left: var(--m-side);
+  }
+
+  /* Episodes and lists: single column, rounded cards */
+  & #childrenContent .itemsContainer.vertical-list,
+  & #childrenCollapsible .childrenItemsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-right: 0 !important;
+    padding: 0 var(--m-side) !important;
+  }
+
+  & .listItem {
+    background: var(--episode-grid-bg);
+    border-radius: var(--theme-roundness-large);
+    padding: 0.5rem;
+    margin: 0;
+  }
+
+  & .listItemImage-large {
+    width: 38vw;
+    border-radius: var(--theme-roundness);
+    overflow: hidden;
+  }
+
+  & .listItemBodyText {
+    font-size: 0.9rem;
+  }
+
+  & .secondary.listItemBodyText {
+    font-size: 0.78rem;
+    opacity: 0.75;
+  }
+
+  /* ==========================================================================
+     7. DIALOGS, MENUS AND FIELDS
+     ========================================================================== */
+  & .actionSheet,
+  & .dialog:not(.formDialog) {
+    background-color: var(--context-menu-bg) !important;
+    -webkit-backdrop-filter: var(--m-blur);
+    backdrop-filter: var(--m-blur);
+    border-radius: var(--theme-roundness-large);
+    border: var(--border-subtle);
+  }
+
+  & .actionSheetMenuItem {
+    border-radius: var(--theme-roundness);
+  }
+
+  & .emby-input,
+  & .emby-select {
+    border-radius: var(--theme-roundness);
+  }
+
+  & .alphaPicker-vertical {
+    display: none;            /* useless on touch and takes up width */
+  }
+
+  /* Keyboard focus (external keyboard / TV remote on a phone layout) */
+  & :is(a, button, select, input, textarea, [tabindex]:not([tabindex="-1"])):focus-visible {
+    outline: 2px solid var(--theme-accent-color);
+    outline-offset: 2px;
+  }
+
+  /* ==========================================================================
+     9. "LEGACY MOBILE" LAYOUT (only if you choose "Mobile (legacy)")
+     ========================================================================== */
+  & .skinHeader.skinHeader-withBackground {
+    background-color: var(--header-bg);
+    -webkit-backdrop-filter: var(--m-blur);
+    backdrop-filter: var(--m-blur);
+  }
+
+  & .skinHeader.skinHeader-withBackground.semiTransparent {
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  &:has(#itemDetailPage:not(.hide)) .skinHeader {
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  & .headerLeft .paper-icon-button-light > .material-icons {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+  }
+
+  & .sectionTabs {
+    width: auto;
+    align-self: center;
+    padding: 0 0.4rem !important;
+  }
+
+  & .emby-tab-button {
+    border-radius: var(--theme-roundness-full);
+    font-weight: 500;
+  }
+
+  & .emby-tab-button-active {
+    background: var(--theme-accent-color-alpha-med);
+    color: var(--theme-accent-color);
+  }
+
+  & .mainDrawer {
+    background-color: var(--sidebar-bg);
+    -webkit-backdrop-filter: var(--m-blur);
+    backdrop-filter: var(--m-blur);
+  }
 }
 
 /* ==========================================================================
-   3. TOP BAR AND SIDE MENU ("Modern" layout / MUI)
-   ========================================================================== */
-html.layout-mobile header.MuiAppBar-root {
-  background-color: var(--header-bg) !important;
-  background-image: none !important;
-  -webkit-backdrop-filter: var(--m-blur);
-  backdrop-filter: var(--m-blur);
-  box-shadow: none !important;
-  border-bottom: var(--border-subtle);
-}
-
-/* On the detail page the bar is transparent over the backdrop */
-html.layout-mobile:has(#itemDetailPage:not(.hide)) header.MuiAppBar-root {
-  background-color: transparent !important;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  border-bottom-color: transparent;
-}
-
-html.layout-mobile header.MuiAppBar-root .MuiIconButton-root {
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
-}
-
-html.layout-mobile .MuiDrawer-paper {
-  background-color: var(--sidebar-bg) !important;
-  background-image: none !important;
-  -webkit-backdrop-filter: var(--m-blur);
-  backdrop-filter: var(--m-blur);
-  border-right: var(--border-subtle);
-  border-radius: 0 var(--theme-roundness-large) var(--theme-roundness-large) 0;
-}
-
-html.layout-mobile .MuiDrawer-paper .MuiListItemButton-root,
-html.layout-mobile .MuiDrawer-paper .MuiListItem-root > a {
-  border-radius: var(--theme-roundness);
-  margin: 0 0.5rem;
-}
-
-html.layout-mobile .MuiDrawer-paper .Mui-selected {
-  background-color: var(--theme-accent-color-alpha-med) !important;
-  color: var(--theme-accent-color);
-}
-
-/* ==========================================================================
-   4. SECTION TITLES AND CAROUSELS
-   ========================================================================== */
-html.layout-mobile .sectionTitle {
-  font-size: 1.3rem !important;
-  font-weight: 600;
-  margin-bottom: 0.4rem;
-}
-
-html.layout-mobile .verticalSection {
-  margin-bottom: 1.4rem;
-}
-
-html.layout-mobile .padded-left {
-  padding-left: var(--m-side) !important;
-}
-
-html.layout-mobile .padded-right {
-  padding-right: var(--m-side) !important;
-}
-
-/* Carousels: side margin, snap and breathing room at the end */
-html.layout-mobile .emby-scroller,
-html.layout-mobile .scrollX {
-  padding-left: var(--m-side);
-  scroll-snap-type: x proximity;
-  scroll-padding-inline: var(--m-side);
-}
-
-html.layout-mobile .itemsContainer:not(.vertical-wrap):not(.vertical-list) {
-  column-gap: var(--m-gap);
-}
-
-html.layout-mobile .itemsContainer:not(.vertical-wrap):not(.vertical-list)::after {
-  content: "";
-  flex: 0 0 var(--m-side);
-}
-
-html.layout-mobile .overflowPortraitCard,
-html.layout-mobile .overflowBackdropCard,
-html.layout-mobile .overflowSquareCard {
-  scroll-snap-align: start;
-  margin-left: 0 !important;
-}
-
-html.layout-mobile .overflowPortraitCard { width: var(--card-portrait-w) !important; }
-html.layout-mobile .overflowBackdropCard { width: var(--card-backdrop-w) !important; }
-html.layout-mobile .overflowSquareCard   { width: var(--card-square-w) !important; }
-
-/* Grids (Movies, Shows, Favorites): 3 portrait columns / 2 landscape */
-html.layout-mobile .vertical-wrap {
-  gap: var(--m-gap);
-  padding-left: var(--m-side);
-  padding-right: var(--m-side);
-  justify-content: flex-start;
-}
-
-html.layout-mobile .vertical-wrap > .portraitCard  { width: calc((100% - var(--m-gap) * 2) / 3) !important; }
-html.layout-mobile .vertical-wrap > .backdropCard  { width: calc((100% - var(--m-gap)) / 2) !important; }
-html.layout-mobile .vertical-wrap > .squareCard    { width: calc((100% - var(--m-gap)) / 2) !important; }
-
-/* ==========================================================================
-   5. CARDS
-   ========================================================================== */
-html.layout-mobile .cardScalable {
-  border-radius: var(--theme-roundness-large) !important;
-  border: var(--border-subtle) !important;
-  background: var(--card-bg);
-  overflow: hidden !important;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
-}
-
-html.layout-mobile .cardBox-bottompadded {
-  margin-bottom: 0.25rem !important;
-}
-
-html.layout-mobile .cardText {
-  font-size: 0.82rem;
-  line-height: 1.35;
-}
-
-html.layout-mobile .cardText-secondary {
-  opacity: 0.7;
-  font-size: 0.74rem;
-}
-
-html.layout-mobile .indicator {
-  font-size: 70%;
-}
-
-html.layout-mobile .cardIndicators > .indicator {
-  border-radius: var(--theme-roundness);
-}
-
-/* Episode / item count badge: white text */
-html.layout-mobile .countIndicator,
-html.layout-mobile .countIndicator * {
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
-}
-
-html.layout-mobile .itemProgressBar {
-  height: 4px;
-  border-radius: 10px;
-  background: var(--theme-black-alpha-med);
-}
-
-html.layout-mobile .itemProgressBarForeground {
-  background: var(--theme-accent-color);
-  border-radius: 10px;
-}
-
-/* The small play button goes away (tapping the card already opens it); the three-dot menu stays */
-html.layout-mobile .cardOverlayButton-br:not([data-action="menu"]) {
-  display: none !important;
-}
-
-html.layout-mobile .cardOverlayButton-br[data-action="menu"] {
-  background: rgba(0, 0, 0, 0.45);
-  border-radius: var(--theme-roundness-full);
-  width: 28px;
-  height: 28px;
-  right: 0.35rem;
-  bottom: 0.35rem;
-}
-
-html.layout-mobile .cardOverlayButton-br[data-action="menu"] .cardOverlayButtonIcon {
-  font-size: 1.1rem;
-}
-
-/* ==========================================================================
-   6. DETAIL PAGE
-   ========================================================================== */
-/* Backdrop: on mobile it is .itemBackdrop (filled by Jellyfin only in the mobile layout) */
-html.layout-mobile .itemBackdrop {
-  display: block !important;
-  height: var(--m-backdrop-h);
-  background-position: top center;
-  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
-}
-
-/* Logo (clearlogo) over the bottom of the backdrop */
-html.layout-mobile .detailLogo {
-  display: block;
-  position: absolute;
-  z-index: 2;
-  left: var(--m-side);
-  right: auto;
-  width: calc(100vw - var(--m-side) * 2);
-  height: var(--m-logo-h);
-  top: calc(var(--m-backdrop-h) - var(--m-logo-h) - 4vh - var(--m-appbar));
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center bottom;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
-}
-
-html.layout-mobile .detailLogo.hide {
-  display: none !important;
-}
-
-/* Content rises a bit over the end of the backdrop */
-html.layout-mobile .detailPageWrapperContainer {
-  display: block;
-  position: relative;
-  z-index: 1;
-  margin-top: -4vh !important;
-  padding-top: 0;
-}
-
-html.layout-mobile .detailPageWrapperContainer,
-html.layout-mobile .detailPagePrimaryContainer,
-html.layout-mobile .detailPageSecondaryContainer {
-  background: transparent !important;
-}
-
-html.layout-mobile .detailPagePrimaryContainer,
-html.layout-mobile .detailPagePrimaryContent,
-html.layout-mobile .detailPageSecondaryContainer {
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box;
-  padding-left: var(--m-side) !important;
-  padding-right: var(--m-side) !important;
-}
-
-html.layout-mobile .detailPageSecondaryContainer {
-  padding-top: 0.5rem !important;
-  padding-left: 0 !important;   /* the carousels already have their own margin */
-  padding-right: 0 !important;
-}
-
-/* With logo: the title and poster are hidden. Without logo: poster centered over the backdrop. */
-html.layout-mobile .detailLogo:not(.hide) ~ .detailPageWrapperContainer .nameContainer h1 {
-  display: var(--m-title-when-logo);
-}
-
-html.layout-mobile .detailLogo:not(.hide) ~ .detailPageWrapperContainer .detailImageContainer {
-  display: none;
-}
-
-html.layout-mobile .detailLogo.hide ~ .detailPageWrapperContainer {
-  margin-top: -26vh !important;
-}
-
-html.layout-mobile .detailImageContainer {
-  display: flex;
-  justify-content: center;
-  padding: 0 !important;
-}
-
-html.layout-mobile .detailImageContainer .card {
-  display: block !important;
-  position: relative !important;
-  float: none;
-  top: 0;
-  left: 0;
-  width: var(--m-poster-w) !important;
-  max-width: 60vw;
-  margin: 0 auto 0.75rem;
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
-}
-
-/* Title, info and buttons centered */
-html.layout-mobile .detailRibbon {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  text-align: center;
-  background: none !important;
-  padding: 0 var(--m-side) !important;
-  position: relative;
-  margin-top: 0;
-}
-
-html.layout-mobile .nameContainer {
-  text-align: center;
-}
-
-html.layout-mobile .nameContainer h1,
-html.layout-mobile .itemName {
-  font-size: 1.55rem;
-  font-weight: 600;
-  line-height: 1.2;
-  margin: 0.25rem 0;
-}
-
-html.layout-mobile .itemMiscInfo,
-html.layout-mobile .mediaInfoItems {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.25rem 0.6rem;
-  font-size: 0.82rem;
-}
-
-/* Year / rating / runtime row: a little lower so it doesn't sit right on the title or logo */
-html.layout-mobile .itemMiscInfo-primary {
-  margin-top: var(--m-misc-offset);
-}
-
-html.layout-mobile .detailLogo.hide ~ .detailPageWrapperContainer .itemMiscInfo-primary {
-  margin-top: 0.4rem;           /* sem logo: o título de texto já tem margem própria */
-}
-
-/* Jellyfin reserves ~37.5% of left padding in .infoWrapper for the poster, even when the
-   poster is hidden. That squeezed the year / runtime / ratings row into the right side of
-   the screen and made it wrap when there were 2+ ratings. Remove it so the row is centered
-   on the full width. */
-html.layout-mobile .infoWrapper,
-html.layout-mobile [dir="ltr"] .infoWrapper,
-html.layout-mobile [dir="rtl"] .infoWrapper {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  width: 100%;
-  max-width: 100%;
-  align-self: stretch;
-}
-
-/* Spacing comes from the row gap; drop the default 1em right margin of each item */
-html.layout-mobile .itemMiscInfo .mediaInfoItem,
-html.layout-mobile .mediaInfoItems .mediaInfoItem {
-  margin: 0 !important;
-}
-
-html.layout-mobile .mainDetailButtons {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.35rem;
-  left: 0 !important;
-  padding-top: 0.75rem;
-  margin: 0;
-}
-
-html.layout-mobile .detailButton {
-  min-width: 2.75rem;
-  height: 2.75rem;
-  margin: 0 !important;
-  border-radius: var(--theme-roundness-full);
-}
-
-html.layout-mobile .btnPlay.detailButton {
-  background: var(--theme-accent-color);
-  color: #fff;
-  padding: 0 1.25rem;
-}
-
-/* Audio / subtitles: single column, full width */
-html.layout-mobile .trackSelections {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  max-width: 100% !important;
-  margin: 1rem 0 0.5rem;
-}
-
-html.layout-mobile .trackSelections .selectContainer {
-  width: 100%;
-  margin: 0;
-}
-
-html.layout-mobile .detailTrackSelect {
-  width: 100% !important;
-  max-width: none !important;
-  min-width: 0 !important;
-  background: var(--button-bg-subtle);
-  border: var(--border-subtle);
-  border-radius: var(--theme-roundness);
-  font-size: 0.9rem;
-  text-overflow: ellipsis;
-}
-
-/* Overview */
-html.layout-mobile .detailSectionContent {
-  text-align: left;
-}
-
-html.layout-mobile .tagline {
-  font-size: 1.05rem;
-  font-style: italic;
-  margin: 0.75rem 0 0.4rem;
-}
-
-html.layout-mobile .overview {
-  font-size: 0.92rem;
-  line-height: 1.5;
-  color: var(--theme-text-color-secondary);
-}
-
-/* Genres, Director, Studios... (12.x React component: no .content) */
-html.layout-mobile .itemDetailsGroup {
-  display: block;
-  margin: 0.75rem 0;
-}
-
-html.layout-mobile .itemDetailsGroup .detailsGroupItem {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35rem 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-html.layout-mobile .itemDetailsGroup .label {
-  flex: 0 0 100%;
-  margin: 0;
-  font-size: 0.78rem;
-  font-weight: 600;
-  opacity: 0.65;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-html.layout-mobile .itemDetailsGroup .content,           /* Jellyfin <= 12.x */
-html.layout-mobile .itemDetailsGroup .detailsGroupItem > .focuscontainer-x {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  font-size: 0;                                             /* hides the commas */
-}
-
-html.layout-mobile .itemDetailsGroup .content a,
-html.layout-mobile .itemDetailsGroup .detailsGroupItem > .focuscontainer-x a {
-  font-size: 0.78rem !important;
-  padding: 0.3rem 0.7rem;
-  background: var(--button-bg-subtle);
-  border-radius: var(--theme-roundness-full);
-  color: var(--theme-text-color);
-  text-decoration: none;
-}
-
-/* Tags / external links in a wrapping row */
-html.layout-mobile .itemExternalLinks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 0.9rem;
-}
-
-/* Cast, "More Like This", etc. */
-html.layout-mobile #itemDetailPage .detailVerticalSection,
-html.layout-mobile #itemDetailPage .verticalSection {
-  padding-left: 0;
-  padding-right: 0;
-}
-
-html.layout-mobile #itemDetailPage .sectionTitle {
-  padding-left: var(--m-side);
-}
-
-/* Episodes and lists: single column, rounded cards */
-html.layout-mobile #childrenContent .itemsContainer.vertical-list,
-html.layout-mobile #childrenCollapsible .childrenItemsContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-right: 0 !important;
-  padding: 0 var(--m-side) !important;
-}
-
-html.layout-mobile .listItem {
-  background: var(--episode-grid-bg);
-  border-radius: var(--theme-roundness-large);
-  padding: 0.5rem;
-  margin: 0;
-}
-
-html.layout-mobile .listItemImage-large {
-  width: 38vw;
-  border-radius: var(--theme-roundness);
-  overflow: hidden;
-}
-
-html.layout-mobile .listItemBodyText {
-  font-size: 0.9rem;
-}
-
-html.layout-mobile .secondary.listItemBodyText {
-  font-size: 0.78rem;
-  opacity: 0.75;
-}
-
-/* ==========================================================================
-   7. DIALOGS, MENUS AND FIELDS
-   ========================================================================== */
-html.layout-mobile .actionSheet,
-html.layout-mobile .dialog:not(.formDialog) {
-  background-color: var(--context-menu-bg) !important;
-  -webkit-backdrop-filter: var(--m-blur);
-  backdrop-filter: var(--m-blur);
-  border-radius: var(--theme-roundness-large);
-  border: var(--border-subtle);
-}
-
-html.layout-mobile .actionSheetMenuItem {
-  border-radius: var(--theme-roundness);
-}
-
-html.layout-mobile .emby-input,
-html.layout-mobile .emby-select {
-  border-radius: var(--theme-roundness);
-}
-
-html.layout-mobile .alphaPicker-vertical {
-  display: none;            /* useless on touch and takes up width */
-}
-
-/* ==========================================================================
-   8. SMALL PHONES AND LANDSCAPE
+   8. SMALL PHONES, LANDSCAPE AND REDUCED MOTION
+   (placed after the rules above so they win at equal specificity)
    ========================================================================== */
 @media (max-width: 380px) {
   :root.layout-mobile {
@@ -2419,8 +2296,8 @@ html.layout-mobile .alphaPicker-vertical {
 
 @media (orientation: landscape) and (max-height: 520px) {
   :root.layout-mobile {
-    --m-backdrop-h: 80vh;
-    --m-logo-h: 26vh;
+    --m-backdrop-h: 80svh;
+    --m-logo-h: 26svh;
     --card-portrait-w: 18vw;
     --card-backdrop-w: 34vw;
     --card-square-w: 22vw;
@@ -2428,48 +2305,16 @@ html.layout-mobile .alphaPicker-vertical {
   }
 
   html.layout-mobile .vertical-wrap > .portraitCard { width: calc((100% - var(--m-gap) * 5) / 6) !important; }
-  html.layout-mobile .vertical-wrap > .backdropCard,
-  html.layout-mobile .vertical-wrap > .squareCard   { width: calc((100% - var(--m-gap) * 3) / 4) !important; }
+  html.layout-mobile .vertical-wrap > :is(.backdropCard, .squareCard) { width: calc((100% - var(--m-gap) * 3) / 4) !important; }
 }
 
-/* ==========================================================================
-   9. "LEGACY MOBILE" LAYOUT (only if you choose "Mobile (legacy)")
-   ========================================================================== */
-html.layout-mobile .skinHeader.skinHeader-withBackground {
-  background-color: var(--header-bg);
-  -webkit-backdrop-filter: var(--m-blur);
-  backdrop-filter: var(--m-blur);
-}
-
-html.layout-mobile .skinHeader.skinHeader-withBackground.semiTransparent,
-html.layout-mobile:has(#itemDetailPage:not(.hide)) .skinHeader {
-  background: transparent;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-
-html.layout-mobile .headerLeft .paper-icon-button-light > .material-icons {
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
-}
-
-html.layout-mobile .sectionTabs {
-  width: auto;
-  align-self: center;
-  padding: 0 0.4rem !important;
-}
-
-html.layout-mobile .emby-tab-button {
-  border-radius: var(--theme-roundness-full);
-  font-weight: 500;
-}
-
-html.layout-mobile .emby-tab-button-active {
-  background: var(--theme-accent-color-alpha-med);
-  color: var(--theme-accent-color);
-}
-
-html.layout-mobile .mainDrawer {
-  background-color: var(--sidebar-bg);
-  -webkit-backdrop-filter: var(--m-blur);
-  backdrop-filter: var(--m-blur);
+@media (prefers-reduced-motion: reduce) {
+  html.layout-mobile *,
+  html.layout-mobile *::before,
+  html.layout-mobile *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
